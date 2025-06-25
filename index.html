@@ -63,34 +63,56 @@
                 <select id="querySelect"
                     class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
                     <option value="">Select a Query</option>
-                    <option value="sales">Total Sales</option>
-                    <option value="avg">Average Sales per Customer</option>
-                    <option value="monthly">Monthly Sales</option>
-                    <option value="citywise">City-wise Sales (Ship To)</option>
-                    <option value="statewise">State-wise Sales (Ship To)</option>
-                    <option value="specificcity">Sales in a Specific City (Ship To)</option>
-                    <option value="specificstate">Sales in a Specific State (Ship To)</option>
-                    <option value="top5cities">Top 5 Cities by Sales</option>
-                    <option value="top5states">Top 5 States by Sales</option>
-                    <option value="top5customers">Top 5 Customers</option>
-                    <option value="bottom5cities">Bottom 5 Cities by Sales</option>
-                    <option value="bottom5states">Bottom 5 States by Sales</option>
-                    <option value="bottom5customers">Bottom 5 Customers</option>
-                    <option value="compare">Compare Two Periods</option>
-                    <option value="plant">Plant-wise Sales</option>
-                    <option value="top5soldto">Top 5 Sold To Parties</option>
-                    <option value="bottom5soldto">Bottom 5 Sold To Parties</option>
-                    <option value="topcustomersstate">Top Customers per State</option>
-                    <option value="topcustomerscity">Top Customers per City</option>
-                    <option value="quarterly">Quarter-wise Sales</option>
-                    <option value="comparecities">Compare Sales Between Two Cities</option>
-                    <option value="comparestates">Compare Sales Between Two States</option>
-                    <option value="focusstates">Focus States</option>
-                    <option value="focusproductstates">Focus States (SKU-wise Sales)</option>
-                    <option value="skusales">SKU-wise Sales</option>
-                    <option value="districtbreakdown">Region-wise Breakdown</option>
-                    <option value="stateproductbreakdown">State SKU-wise Sales</option>
+
+                    <optgroup label="General Sales">
+                        <option value="sales">Total Sales</option>
+                        <option value="avg">Average Sales per Customer</option>
+                        <option value="monthly">Monthly Sales</option>
+                        <option value="quarterly">Quarter-wise Sales</option>
+                    </optgroup>
+
+                    <optgroup label="Customer Insights">
+                        <option value="top5customers">Top 5 Customers</option>
+                        <option value="bottom5customers">Bottom 5 Customers</option>
+                        <option value="topcustomersstate">Top Customers per State</option>
+                        <option value="topcustomerscity">Top Customers per City</option>
+                        <option value="comparecustomersales">Compare Customer Sales</option>
+                    </optgroup>
+
+                    <optgroup label="Geographical Sales">
+                        <option value="citywise">City-wise Sales (Ship To)</option>
+                        <option value="statewise">State-wise Sales (Ship To)</option>
+                        <option value="specificcity">Sales in a Specific City (Ship To)</option>
+                        <option value="specificstate">Sales in a Specific State (Ship To)</option>
+                        <option value="top5cities">Top 5 Cities by Sales</option>
+                        <option value="bottom5cities">Bottom 5 Cities by Sales</option>
+                        <option value="top5states">Top 5 States by Sales</option>
+                        <option value="bottom5states">Bottom 5 States by Sales</option>
+                        <option value="districtbreakdown">Region-wise Breakdown</option>
+                    </optgroup>
+
+                    <optgroup label="Comparative Analysis">
+                        <option value="compare">Compare Two Periods</option>
+                        <option value="comparecities">Compare Sales Between Two Cities</option>
+                        <option value="comparestates">Compare Sales Between Two States</option>
+                    </optgroup>
+
+                    <optgroup label="Focus Areas">
+                        <option value="focusstates">Focus States</option>
+                        <option value="focusproductstates">Focus States (SKU-wise Sales)</option>
+                    </optgroup>
+
+                    <optgroup label="SKU/Product-Based Sales">
+                        <option value="skusales">SKU-wise Sales</option>
+                        <option value="stateproductbreakdown">State SKU-wise Sales</option>
+                    </optgroup>
+
+                    <optgroup label="Plant Sales">
+                        <option value="plant">Plant-wise Sales</option>
+                    </optgroup>
                 </select>
+
+
             </div>
         </div>
 
@@ -231,12 +253,6 @@
                 let yearToUse = yearMatch ? yearMatch[1] : year;
                 showMonthlySales(yearToUse, product);
                 handled = true;
-            } else if (/top\s*5.*sold\s*to\s*party/i.test(query)) {
-                showTopBottomSoldToParties(month, year, product, 'top');
-                handled = true;
-            } else if (/bottom\s*5.*sold\s*to\s*party/i.test(query)) {
-                showTopBottomSoldToParties(month, year, product, 'bottom');
-                handled = true;
             } else if (/top\s*customers?\s*per\s*state/i.test(query)) {
                 showTopCustomersPerState(month, year, product);
                 handled = true;
@@ -273,7 +289,58 @@
             } else if (/state.*product.*sales/i.test(query)) {
                 showStateWiseProductSales(month, year, product);
                 handled = true;
-            } else {
+            } /// === Customer Sales Comparison via Send Button ===
+            else if (session.awaitingCustomerName && !session.customerCompare?.name) {
+                const inputName = query.trim().toLowerCase();
+                const customers = [...new Set(salesData.map(r => r['Customer Name']).filter(Boolean))];
+
+                const matched = customers.find(c => c.toLowerCase().includes(inputName));
+
+                if (matched) {
+                    session.customerCompare.name = matched;
+                    session.awaitingCustomerName = false;
+                    session.awaitingCustomerPeriod = true;
+                    addMessage('Bot', `Customer selected: <strong>${matched}</strong><br>Now enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024"`);
+                } else {
+                    const suggestions = customers
+                        .filter(c => c.toLowerCase().includes(inputName))
+                        .slice(0, 5)
+                        .join(', ');
+                    addMessage('Bot', `Customer not found. ${suggestions ? 'Did you mean: ' + suggestions : 'Try a different name.'}`);
+                }
+
+                handled = true;
+
+            } else if (session.awaitingCustomerPeriod && session.customerCompare?.name) {
+                const match = query.match(/([a-z]{3,9}?\s*20\d{2}|\d{4})\s*(?:and|vs)\s*([a-z]{3,9}?\s*20\d{2}|\d{4})/i);
+
+                if (!match) {
+                    addMessage('Bot', 'Please enter two valid periods like "2023 and 2024" or "Jan 2023 and Feb 2024".');
+                } else {
+                    const p1 = match[1].trim();
+                    const p2 = match[2].trim();
+
+                    const parsePeriod = (p) => {
+                        const parts = p.split(' ');
+                        if (parts.length === 2) {
+                            return { month: monthMap[parts[0].toLowerCase()], year: parts[1] };
+                        } else {
+                            return { month: null, year: parts[0] };
+                        }
+                    };
+
+                    const period1 = parsePeriod(p1);
+                    const period2 = parsePeriod(p2);
+
+                    session.awaitingCustomerPeriod = false;
+
+                    compareCustomerSales(session.customerCompare.name, period1, period2, product);
+                }
+
+                handled = true;
+            }
+
+            else {
                 const locMatch = query.match(/sales\s+in\s+([a-zA-Z\s]+)/i);
                 if (locMatch) {
                     const loc = locMatch[1].trim().toLowerCase();
@@ -291,6 +358,8 @@
                     }
                 }
             }
+
+
 
             if (!handled && query === "") {
                 addMessage('Bot', "Please select a query from the drop-down or type your request.");
@@ -396,30 +465,6 @@
             addMessage('Bot', table);
         }
 
-        function showTopBottomSoldToParties(month, year, product, type = 'top') {
-            const filtered = filterData(month, year, product);
-            if (!filtered.length) return addMessage('Bot', 'No Sold To Party data found.');
-
-            const soldToSales = {};
-            filtered.forEach(r => {
-                const name = r['Sold to Party Name'] || 'Unknown';
-                soldToSales[name] = (soldToSales[name] || 0) + (+r['Net Sales Qty'] || 0);
-            });
-
-            const sorted = Object.entries(soldToSales).sort((a, b) => b[1] - a[1]);
-            const selected = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
-            const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 Sold To Parties`;
-
-            let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
-            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">Sold To Party</th><th class="text-right">Sales</th></tr>`;
-            selected.forEach(([name, val]) => {
-                table += `<tr><td class="pr-4">${name}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
-            });
-            table += '</table>';
-
-            addMessage('Bot', table);
-        }
-
         // Show average sales per customer
         function showAverageSales(month, year, product) {
             const filtered = filterData(month, year, product);
@@ -488,6 +533,8 @@
         }
 
         // Map month names to standard abbreviations
+        const session = {};
+
         const monthMap = {
             january: "Jan", february: "Feb", march: "Mar", april: "Apr",
             may: "May", june: "Jun", july: "Jul", august: "Aug",
@@ -973,6 +1020,48 @@
             addMessage('Bot', msg);
         }
 
+        function compareCustomerSales(customerName, period1, period2, product) {
+            const getSales = (month, year) => {
+                return filterData(month, year, product)
+                    .filter(r => (r['Customer Name'] || '').toLowerCase() === customerName.toLowerCase())
+                    .reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            };
+
+            const sales1 = getSales(period1.month, period1.year);
+            const sales2 = getSales(period2.month, period2.year);
+
+            const label1 = period1.month ? `${period1.month} ${period1.year}` : period1.year;
+            const label2 = period2.month ? `${period2.month} ${period2.year}` : period2.year;
+
+            let percentChange = 'N/A';
+            let colorClass = '';
+
+            if (sales1 !== 0) {
+                const change = ((sales2 - sales1) / sales1) * 100;
+                const formattedChange = change.toFixed(2) + '%';
+                colorClass = change >= 0 ? 'text-green-600' : 'text-red-600';
+                percentChange = `<span class="${colorClass}">${formattedChange}</span>`;
+            }
+
+            const table = `
+        <h3 class="font-semibold mb-1">Sales Comparison for <strong>${customerName}</strong></h3>
+        <table class="min-w-full text-sm">
+            <tr><th class="text-left pr-4">Period</th><th class="text-right">Sales Qty</th></tr>
+            <tr><td class="pr-4">${label1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
+            <tr><td class="pr-4">${label2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
+        </table>
+        <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
+    `;
+
+            addMessage('Bot', table);
+
+            session.customerCompare = {};
+            session.awaitingCustomerName = false;
+            session.awaitingCustomerPeriod = false;
+        }
+
+
+
         // Utility: Add messages to chat window
         function addMessage(sender, text) {
             const chatWindow = document.getElementById('chatWindow');
@@ -1067,14 +1156,6 @@
                     showPlantPerformance(month, year, product);
                     handled = true;
                     break;
-                case 'top5soldto':
-                    showTopBottomSoldToParties(month, year, product, 'top');
-                    handled = true;
-                    break;
-                case 'bottom5soldto':
-                    showTopBottomSoldToParties(month, year, product, 'bottom');
-                    handled = true;
-                    break;
                 case 'topcustomersstate':
                     showTopCustomersPerState(month, year, product);
                     handled = true;
@@ -1148,10 +1229,15 @@
                     showStateWiseProductSales(month, year, product);
                     handled = true;
                     break;
-
+                case 'comparecustomersales':
+                    session.customerCompare = {};
+                    session.awaitingCustomerName = true;
+                    session.awaitingCustomerPeriod = false;
+                    addMessage('Bot', 'Please enter the Customer Name:');
+                    handled = true;
+                    break;
             }
 
-            // ⛔ This was missing
             if (!handled && query === "") {
                 addMessage('Bot', "Please select a query from the drop-down or type your request.");
             }
