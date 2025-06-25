@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Sales Data Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for reading Excel/CSV files -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body class="bg-blue-900 flex flex-col items-center min-h-screen p-6 text-white">
+
+    <div class="flex items-center gap-3 mb-6 px-6 justify-start w-full">
+        <img src="logo.jpeg" alt="Company Logo" class="w-24 h-15 rounded-md" />
+        <h1 class="text-3xl font-bold text-white tracking-wide text-center w-full">
+            Sales Data Chatbot
+        </h1>
+    </div>
+
+    <!-- Parent container for split layout -->
+    <div class="flex flex-col w-full max-w-7xl mx-auto gap-8 mt-6">
+
+        <div class="w-full flex flex-col items-center gap-6 px-6">
+
+            <!-- Line 1: File Upload Button + File Name Display -->
+            <div class="flex items-center gap-4">
+                <!-- Choose File Button -->
+                <label for="fileInput"
+                    class="w-60 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition text-center cursor-pointer flex justify-center items-center">
+                    Choose file
+                </label>
+
+                <!-- File Name Display -->
+                <div id="fileNameDisplay"
+                    class="w-60 h-10 flex items-center px-3 bg-white border border-gray-300 rounded text-sm text-black">
+                    No file chosen
+                </div>
+
+                <!-- Hidden Real Input -->
+                <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
+            </div>
+
+            <!-- Line 2: Dropdowns -->
+            <div class="flex flex-wrap gap-2">
+                <select id="yearSelect"
+                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+                    <option value="">Year</option>
+                </select>
+
+                <select id="monthSelect"
+                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+                    <option value="">Month</option>
+                </select>
+
+                <select id="productSelect"
+                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+                    <option value="">Product</option>
+                </select>
+
+                <select id="querySelect"
+                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+                    <option value="">Select a Query</option>
+                    <option value="sales">Total Sales</option>
+                    <option value="avg">Average Sales per Customer</option>
+                    <option value="monthly">Monthly Sales</option>
+                    <option value="citywise">City-wise Sales (Ship To)</option>
+                    <option value="statewise">State-wise Sales (Ship To)</option>
+                    <option value="specificcity">Sales in a Specific City (Ship To)</option>
+                    <option value="specificstate">Sales in a Specific State (Ship To)</option>
+                    <option value="top5cities">Top 5 Cities by Sales</option>
+                    <option value="top5states">Top 5 States by Sales</option>
+                    <option value="top5customers">Top 5 Customers</option>
+                    <option value="bottom5cities">Bottom 5 Cities by Sales</option>
+                    <option value="bottom5states">Bottom 5 States by Sales</option>
+                    <option value="bottom5customers">Bottom 5 Customers</option>
+                    <option value="compare">Compare Two Periods</option>
+                    <option value="plant">Plant-wise Sales</option>
+                    <option value="top5soldto">Top 5 Sold To Parties</option>
+                    <option value="bottom5soldto">Bottom 5 Sold To Parties</option>
+                    <option value="topcustomersstate">Top Customers per State</option>
+                    <option value="topcustomerscity">Top Customers per City</option>
+                    <option value="quarterly">Quarter-wise Sales</option>
+                    <option value="comparecities">Compare Sales Between Two Cities</option>
+                    <option value="comparestates">Compare Sales Between Two States</option>
+                    <option value="focusstates">Focus States</option>
+                    <option value="focusproductstates">Focus States (SKU-wise Sales)</option>
+                    <option value="skusales">SKU-wise Sales</option>
+                    <option value="districtbreakdown">Region-wise Breakdown</option>
+                    <option value="stateproductbreakdown">State SKU-wise Sales</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: User Input + Chat Window -->
+        <div class="w-full flex justify-center px-6">
+            <div class="flex items-center gap-4">
+                <!-- Input Box -->
+                <input id="userInput"
+                    class="w-[400px] h-10 border border-gray-300 rounded px-3 text-black bg-white text-sm"
+                    placeholder="Ask me about the sales data…" />
+
+
+                <!-- Ask Button -->
+                <button id="sendBtn"
+                    class="w-60 h-10 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition">
+                    Ask the Bot
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bigger Chat Window -->
+    <div id="chatWindow"
+        class="w-[1100px] mt-6 h-[350px] overflow-y-auto bg-white border border-gray-200 shadow rounded p-5 mb-4 text-base text-black">
+        <!-- Chat messages appear here -->
+    </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+
+        fileInput.addEventListener('change', function () {
+            const fileName = this.files.length > 0 ? this.files[0].name : "No file chosen";
+            fileNameDisplay.textContent = fileName;
+        });
+
+        let salesData = []; // Holds the loaded sales records
+
+        // Handle file input change event
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                salesData = XLSX.utils.sheet_to_json(sheet);
+
+                // Populate filter dropdowns
+                const years = new Set();
+                const months = new Set();
+                const products = new Set();
+
+                salesData.forEach(r => {
+                    if (r.Year) years.add(r.Year);
+                    if (r.Month_Name) months.add(r.Month_Name);
+                    if (r['Product  Hierarchy - Product Variant']) {
+                        products.add(r['Product  Hierarchy - Product Variant']);
+                    }
+                });
+
+                populateSelect('yearSelect', years);
+                populateSelect('monthSelect', months);
+                populateSelect('productSelect', products);
+
+                addMessage('Bot', 'File loaded! You can now use filters or ask questions.');
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Helper: Populate a select element with sorted values
+        function populateSelect(id, setValues) {
+            const select = document.getElementById(id);
+            const placeholder = select.options[0].text;
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            Array.from(setValues).sort().forEach(value => {
+                select.innerHTML += `<option value="${value}">${value}</option>`;
+            });
+        }
+
+        function handleUserRequest() {
+            const year = document.getElementById('yearSelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const product = document.getElementById('productSelect').value;
+            const querySelectValue = document.getElementById('querySelect').value;
+            const queryInput = document.getElementById('userInput');
+            let query = queryInput.value.trim().toLowerCase() || querySelectValue;
+
+            addMessage('You', (query || '[Selection]') +
+                (year ? ' | Year: ' + year : '') +
+                (month ? ' | Month: ' + month : '') +
+                (product ? ' | Product: ' + product : ''));
+
+            let handled = false;
+
+            if (/^(total\s*)?sales$/i.test(query)) {
+                showSalesForSelection(month, year, product);
+                handled = true;
+            } else if (/top\s*5.*customer/i.test(query)) {
+                showTopBottomCustomers(month, year, product, 'top');
+                handled = true;
+            } else if (/bottom\s*5.*customer/i.test(query)) {
+                showTopBottomCustomers(month, year, product, 'bottom');
+                handled = true;
+            } else if (/top\s*5.*states/i.test(query)) {
+                showTopBottomStates(month, year, product, 'top');
+                handled = true;
+            } else if (/bottom\s*5.*states/i.test(query)) {
+                showTopBottomStates(month, year, product, 'bottom');
+                handled = true;
+            } else if (/top\s*5.*cities/i.test(query)) {
+                showTopBottomCities(month, year, product, 'top');
+                handled = true;
+            } else if (/bottom\s*5.*cities/i.test(query)) {
+                showTopBottomCities(month, year, product, 'bottom');
+                handled = true;
+            } else if (/average|avg/i.test(query)) {
+                showAverageSales(month, year, product);
+                handled = true;
+            } else if (/city[\s\-]?wise/i.test(query)) {
+                showLocationWiseSales('city', month, year, product);
+                handled = true;
+            } else if (/state[\s\-]?wise/i.test(query)) {
+                showLocationWiseSales('state', month, year, product);
+                handled = true;
+            } else if (/plant.*performance/i.test(query) || /plant.*sales/i.test(query)) {
+                showPlantPerformance(month, year, product);
+                handled = true;
+            } else if (/compare/i.test(query) && /(\d{4})/.test(query)) {
+                handleComparisonQuery(query, product);
+                handled = true;
+            } else if (/monthly\s*(trend|sales)/i.test(query)) {
+                let yearMatch = query.match(/(20\d{2})/);
+                let yearToUse = yearMatch ? yearMatch[1] : year;
+                showMonthlySales(yearToUse, product);
+                handled = true;
+            } else if (/top\s*5.*sold\s*to\s*party/i.test(query)) {
+                showTopBottomSoldToParties(month, year, product, 'top');
+                handled = true;
+            } else if (/bottom\s*5.*sold\s*to\s*party/i.test(query)) {
+                showTopBottomSoldToParties(month, year, product, 'bottom');
+                handled = true;
+            } else if (/top\s*customers?\s*per\s*state/i.test(query)) {
+                showTopCustomersPerState(month, year, product);
+                handled = true;
+            } else if (/top\s*customers?\s*per\s*city/i.test(query)) {
+                showTopCustomersPerCity(month, year, product);
+                handled = true;
+            } else if (/quarter.*sales/i.test(query)) {
+                showQuarterlySales(month, year, product);
+                handled = true;
+            } else if (/compare\s+.*\s+and\s+.*\s+cities?/i.test(query)) {
+                const match = query.match(/compare\s+(.+?)\s+and\s+(.+?)\s+cities?/i);
+                if (match) {
+                    compareCities(match[1], match[2], month, year, product);
+                    handled = true;
+                }
+            } else if (/compare\s+.*\s+and\s+.*\s+states?/i.test(query)) {
+                const match = query.match(/compare\s+(.+?)\s+and\s+(.+?)\s+states?/i);
+                if (match) {
+                    compareStates(match[1], match[2], month, year, product);
+                    handled = true;
+                }
+            } else if (/focus.*maharashtra.*karnataka/i.test(query)) {
+                compareMaharashtraAndKarnataka(month, year, product);
+                handled = true;
+            } else if (/SKU.*maharashtra.*karnataka/i.test(query)) {
+                showProductSalesForFocusStates(month, year, product);
+                handled = true;
+            } else if (/sku[-\s]?wise\s+sales/i.test(query)) {
+                showSkuWiseSales(month, year, product);
+                handled = true;
+            } else if (/district.*state.*sales/i.test(query)) {
+                showSalesByDistrictAndState(month, year, product);
+                handled = true;
+            } else if (/state.*product.*sales/i.test(query)) {
+                showStateWiseProductSales(month, year, product);
+                handled = true;
+            } else {
+                const locMatch = query.match(/sales\s+in\s+([a-zA-Z\s]+)/i);
+                if (locMatch) {
+                    const loc = locMatch[1].trim().toLowerCase();
+                    const filtered = filterData(month, year, product);
+
+                    if (filtered.some(r => (r['Ship To City'] || '').toLowerCase().includes(loc))) {
+                        showSpecificLocationSales(loc, month, year, product);
+                        handled = true;
+                    } else if (filtered.some(r => (r['Ship To State Text'] || '').toLowerCase().includes(loc))) {
+                        showSpecificStateSales(loc, month, year, product);
+                        handled = true;
+                    } else {
+                        addMessage('Bot', `No sales data found for "${loc}".`);
+                        handled = true;
+                    }
+                }
+            }
+
+            if (!handled && query === "") {
+                addMessage('Bot', "Please select a query from the drop-down or type your request.");
+            }
+
+            if (!handled && query !== "") {
+                addMessage('Bot', "I'm unable to provide a result for that query at the moment.");
+            }
+
+            // Clear input field after processing
+            queryInput.value = '';
+        }
+
+        // Add event listeners
+        document.getElementById('userInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') handleUserRequest();
+        });
+
+        // Filter sales data by selected filters
+        function filterData(month, year, product) {
+            return salesData
+                .filter(r => (!year || String(r.Year) === String(year)))
+                .filter(r => (!month || r.Month_Name === month))
+                .filter(r => (!product || r['Product  Hierarchy - Product Variant'] === product));
+        }
+
+        // Show total sales for current filters
+        function showSalesForSelection(month, year, product) {
+            const filtered = filterData(month, year, product);
+            const total = filtered.reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            addMessage('Bot', filtered.length
+                ? `Total Net Sales Qty: ${total.toLocaleString()} MT`
+                : 'No matching data found.');
+        }
+
+        // Show top/bottom 5 customers based on sales quantity
+        function showTopBottomCustomers(month, year, product, type) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No customer data found.');
+
+            const customerSales = {};
+            filtered.forEach(r => {
+                const name = r['Customer Name'] || 'Unknown';
+                customerSales[name] = (customerSales[name] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(customerSales).sort((a, b) => b[1] - a[1]);
+            const selected = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
+
+            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">Customer</th><th class="text-right">Sales</th></tr>`;
+            selected.forEach(([name, val]) => {
+                table += `<tr><td class="pr-4">${name}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+            addMessage('Bot', `${type === 'top' ? 'Top' : 'Bottom'} 5 Customers:<br>${table}`);
+        }
+
+        function showTopBottomStates(month, year, product, type = 'top') {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No state data found.');
+
+            const stateSales = {};
+            filtered.forEach(r => {
+                const state = r['Ship To State Text'] || 'Unknown';
+                stateSales[state] = (stateSales[state] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(stateSales).sort((a, b) => b[1] - a[1]);
+            const selectedStates = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
+            const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 States`;
+
+            let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">State</th><th class="text-right">Sales</th></tr>`;
+            selectedStates.forEach(([state, val]) => {
+                table += `<tr><td class="pr-4">${state}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+
+            addMessage('Bot', table);
+        }
+
+        function showTopBottomCities(month, year, product, type = 'top') {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No city data found.');
+
+            const citySales = {};
+            filtered.forEach(r => {
+                const city = r['Ship To City'] || 'Unknown';
+                citySales[city] = (citySales[city] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(citySales).sort((a, b) => b[1] - a[1]);
+            const selectedCities = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
+            const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 Cities`;
+
+            let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">City</th><th class="text-right">Sales</th></tr>`;
+            selectedCities.forEach(([city, val]) => {
+                table += `<tr><td class="pr-4">${city}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+
+            addMessage('Bot', table);
+        }
+
+        function showTopBottomSoldToParties(month, year, product, type = 'top') {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No Sold To Party data found.');
+
+            const soldToSales = {};
+            filtered.forEach(r => {
+                const name = r['Sold to Party Name'] || 'Unknown';
+                soldToSales[name] = (soldToSales[name] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(soldToSales).sort((a, b) => b[1] - a[1]);
+            const selected = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
+            const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 Sold To Parties`;
+
+            let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">Sold To Party</th><th class="text-right">Sales</th></tr>`;
+            selected.forEach(([name, val]) => {
+                table += `<tr><td class="pr-4">${name}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+
+            addMessage('Bot', table);
+        }
+
+        // Show average sales per customer
+        function showAverageSales(month, year, product) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No data found.');
+
+            const totalSales = filtered.reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            const uniqueCustomers = new Set(filtered.map(r => r['Customer Name'])).size;
+            if (!uniqueCustomers) return addMessage('Bot', 'No valid customer data.');
+
+            const avg = totalSales / uniqueCustomers;
+            addMessage('Bot', `Average Net Sales Qty: ${avg.toFixed(2)} MT`);
+        }
+
+        // Show sales aggregated by city or state
+        function showLocationWiseSales(type, month, year, product) {
+            const key = type === 'state' ? 'Ship To State Text' : 'Ship To City';
+            const filtered = filterData(month, year, product);
+            const locSales = {};
+
+            filtered.forEach(r => {
+                const loc = r[key] || 'Unknown';
+                locSales[loc] = (locSales[loc] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(locSales).sort((a, b) => b[1] - a[1]);
+            if (!sorted.length) return addMessage('Bot', `No ${type}-wise data found.`);
+
+            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">${type.charAt(0).toUpperCase() + type.slice(1)}</th><th class="text-right">Sales</th></tr>`;
+            sorted.forEach(([loc, qty]) => {
+                table += `<tr><td class="pr-4">${loc}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+            addMessage('Bot', `${type.charAt(0).toUpperCase() + type.slice(1)}-wise Sales:<br>${table}`);
+        }
+
+        // Show total sales for a specific city
+        function showSpecificLocationSales(queryCity, month, year, product) {
+            const filtered = filterData(month, year, product);
+            let total = 0, matched = '';
+            filtered.forEach(r => {
+                const city = (r['Ship To City'] || '').toLowerCase();
+                if (city.includes(queryCity)) {
+                    total += (+r['Net Sales Qty'] || 0);
+                    matched = r['Ship To City'];
+                }
+            });
+            addMessage('Bot', total
+                ? `Total sales in ${matched}: ${total.toLocaleString()} MT`
+                : `No sales data found for "${queryCity}".`);
+        }
+
+        // Show total sales for a specific state
+        function showSpecificStateSales(queryState, month, year, product) {
+            const filtered = filterData(month, year, product);
+            let total = 0, matched = '';
+            filtered.forEach(r => {
+                const state = (r['Ship To State Text'] || '').toLowerCase();
+                if (state.includes(queryState)) {
+                    total += (+r['Net Sales Qty'] || 0);
+                    matched = r['Ship To State Text'];
+                }
+            });
+            addMessage('Bot', total
+                ? `Total sales in ${matched}: ${total.toLocaleString()} MT`
+                : `No sales data found for "${queryState}".`);
+        }
+
+        // Map month names to standard abbreviations
+        const monthMap = {
+            january: "Jan", february: "Feb", march: "Mar", april: "Apr",
+            may: "May", june: "Jun", july: "Jul", august: "Aug",
+            september: "Sep", october: "Oct", november: "Nov", december: "Dec",
+            jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr",
+            jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep",
+            oct: "Oct", nov: "Nov", dec: "Dec"
+        };
+
+        // Handle comparison queries (month-year or year-over-year)
+        function handleComparisonQuery(query, product) {
+            const monthYearMatches = [...query.matchAll(/([A-Za-z]+)[\s\-]?(20\d{2})/g)];
+            const yearMatches = [...query.matchAll(/\b(20\d{2})\b/g)];
+
+            // If two valid month-year combos are found
+            if (monthYearMatches.length >= 2) {
+                const [, m1, y1] = monthYearMatches[0];
+                const [, m2, y2] = monthYearMatches[1];
+                const month1 = monthMap[m1.toLowerCase()];
+                const month2 = monthMap[m2.toLowerCase()];
+                if (month1 && month2) {
+                    return compareSales(month1, y1, month2, y2, product);
+                }
+            }
+
+            // If at least two years are present
+            if (yearMatches.length >= 2) {
+                let [year1, year2] = [yearMatches[0][1], yearMatches[1][1]];
+                if (year1 === year2) {
+                    return addMessage('Bot', 'Please choose two different years to compare.');
+                }
+                if (year2 < year1) [year1, year2] = [year2, year1];
+                return compareSalesByYear(year1, year2, product);
+            }
+
+            // Give guidance if input format is unclear
+            addMessage('Bot', `To compare, specify either:
+• Two full month‑years (e.g., "Compare Jan 2023 with Mar 2024"), or
+• Two years (e.g., "Compare 2023 with 2024").`);
+        }
+
+        // Compare two specific month-year periods
+        function compareSales(month1, year1, month2, year2, product) {
+            const sales1 = filterData(month1, year1, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            const sales2 = filterData(month2, year2, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+
+            let percentChange = 'N/A';
+            let colorClass = '';
+
+            if (sales1 !== 0) {
+                const change = ((sales2 - sales1) / sales1) * 100;
+                const formattedChange = change.toFixed(2) + '%';
+                colorClass = change >= 0 ? 'text-green-600' : 'text-red-600';
+                percentChange = `<span class="${colorClass}">${formattedChange}</span>`;
+            }
+
+            const table = `
+    <table class="min-w-full text-sm">
+      <tr><th class="text-left pr-4">Month-Year</th><th class="text-right">Sales</th></tr>
+      <tr><td class="pr-4">${month1} ${year1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
+      <tr><td class="pr-4">${month2} ${year2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
+    </table>
+    <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
+  `;
+
+            addMessage('Bot', 'Month-wise Sales Comparison:<br>' + table);
+        }
+
+        // Compare total sales between two years
+        function compareSalesByYear(year1, year2, product) {
+            const sales1 = filterData(null, year1, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            const sales2 = filterData(null, year2, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+
+            let percentChange = 'N/A';
+            let colorClass = '';
+
+            if (sales1 !== 0) {
+                const change = ((sales2 - sales1) / sales1) * 100;
+                const formattedChange = change.toFixed(2) + '%';
+                colorClass = change >= 0 ? 'text-green-600' : 'text-red-600';
+                percentChange = `<span class="${colorClass}">${formattedChange}</span>`;
+            }
+
+            const table = `
+    <table class="min-w-full text-sm">
+      <tr><th class="text-left pr-4">Year</th><th class="text-right">Sales</th></tr>
+      <tr><td class="pr-4">${year1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
+      <tr><td class="pr-4">${year2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
+    </table>
+    <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
+  `;
+
+            addMessage('Bot', 'Year-wise Sales Comparison:<br>' + table);
+        }
+
+        // Show monthly sales for a given year
+        function showMonthlySales(year, product) {
+            const filtered = filterData(null, year, product);
+            if (!filtered.length) return addMessage('Bot', `No data found for ${year}.`);
+
+            // Map to store month totals
+            const monthlyTotals = {};
+            filtered.forEach(r => {
+                const month = r.Month_Name;
+                monthlyTotals[month] = (monthlyTotals[month] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            // Sort by month order
+            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const sorted = Object.entries(monthlyTotals).sort((a, b) =>
+                monthOrder.indexOf(a[0]) - monthOrder.indexOf(b[0])
+            );
+
+            // Create HTML table
+            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">Month</th><th class="text-right">Sales Qty</th></tr>`;
+            sorted.forEach(([month, qty]) => {
+                table += `<tr><td class="pr-4">${month}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+            });
+            table += `</table>`;
+
+            addMessage('Bot', `Monthly Sales for ${year}:<br>${table}`);
+        }
+
+        function showPlantPerformance(month, year, product) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No plant data found for the selected filters.');
+
+            const plantSales = {};
+
+            filtered.forEach(r => {
+                const plant = r['Plant_Name'];
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!plant || plant.trim() === '') return;
+
+                const cleanPlant = plant.trim();
+                plantSales[cleanPlant] = (plantSales[cleanPlant] || 0) + qty;
+            });
+
+            const allPlants = Object.entries(plantSales)
+                .sort((a, b) => a[0].localeCompare(b[0])); // sort alphabetically by name
+
+            if (allPlants.length === 0) {
+                return addMessage('Bot', 'No valid plant names with sales found.');
+            }
+
+            let title = `Plant-wise Sales (${[
+                month ? 'Month: ' + month : '',
+                year ? 'Year: ' + year : '',
+                product ? 'Product: ' + product : ''
+            ].filter(Boolean).join(', ')})`;
+
+            let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
+            table += `<table class="min-w-full text-sm mb-4">
+              <tr>
+                <th class="text-left pr-4">Plant Name</th>
+                <th class="text-right">Net Sales Qty</th>
+              </tr>`;
+            allPlants.forEach(([plant, qty]) => {
+                table += `<tr><td class="pr-4">${plant}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+            });
+            table += `</table>`;
+
+            addMessage('Bot', table);
+        }
+
+        function showTopCustomersPerState(month, year, product) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No data found.');
+
+            const grouped = {};
+
+            filtered.forEach(r => {
+                const state = r['Ship To State Text'] || 'Unknown';
+                const customer = r['Customer Name'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!grouped[state]) grouped[state] = {};
+                grouped[state][customer] = (grouped[state][customer] || 0) + qty;
+            });
+
+            // Collect top customers per state
+            const topCustomers = [];
+            for (const state in grouped) {
+                const [customer, qty] = Object.entries(grouped[state])
+                    .sort((a, b) => b[1] - a[1])[0];
+                topCustomers.push({ state, customer, qty });
+            }
+
+            // Sort by quantity descending
+            topCustomers.sort((a, b) => b.qty - a.qty);
+
+            let table = `<h3 class="font-semibold mb-1">Top Customers per State</h3>`;
+            topCustomers.forEach(entry => {
+                table += `<p><strong>${entry.state}</strong>: ${entry.customer} - ${entry.qty.toLocaleString()} MT</p>`;
+            });
+
+            addMessage('Bot', table);
+        }
+
+        function showTopCustomersPerCity(month, year, product) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No data found.');
+
+            const grouped = {};
+
+            filtered.forEach(r => {
+                const city = r['Ship To City'] || 'Unknown';
+                const customer = r['Customer Name'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!grouped[city]) grouped[city] = {};
+                grouped[city][customer] = (grouped[city][customer] || 0) + qty;
+            });
+
+            // Collect top customers per city
+            const topCustomers = [];
+            for (const city in grouped) {
+                const [customer, qty] = Object.entries(grouped[city])
+                    .sort((a, b) => b[1] - a[1])[0];
+                topCustomers.push({ city, customer, qty });
+            }
+
+            // Sort by quantity descending
+            topCustomers.sort((a, b) => b.qty - a.qty);
+
+            let table = `<h3 class="font-semibold mb-1">Top Customers per City</h3>`;
+            topCustomers.forEach(entry => {
+                table += `<p><strong>${entry.city}</strong>: ${entry.customer} - ${entry.qty.toLocaleString()} MT</p>`;
+            });
+
+            addMessage('Bot', table);
+        }
+
+        function showQuarterlySales(month, year, product) {
+            const filtered = filterData(month, year, product);
+            if (!filtered.length) return addMessage('Bot', 'No data found.');
+
+            const quarterSales = {};
+            filtered.forEach(r => {
+                const quarter = r['Qtr No'] || 'Q?';
+                quarterSales[quarter] = (quarterSales[quarter] || 0) + (+r['Net Sales Qty'] || 0);
+            });
+
+            const sorted = Object.entries(quarterSales).sort((a, b) => a[0] - b[0]);
+
+            let table = `<h3 class="font-semibold mb-1">Quarter-wise Sales</h3>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">Quarter</th><th class="text-right">Sales</th></tr>`;
+            sorted.forEach(([qtr, val]) => {
+                table += `<tr><td class="pr-4">Q${qtr}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            });
+            table += '</table>';
+
+            addMessage('Bot', table);
+        }
+
+        function compareCities(city1, city2, month, year, product) {
+            const filtered = filterData(month, year, product);
+            let total1 = 0, total2 = 0;
+
+            filtered.forEach(r => {
+                const city = (r['Ship To City'] || '').toLowerCase();
+                const qty = +r['Net Sales Qty'] || 0;
+                if (city.includes(city1.toLowerCase())) total1 += qty;
+                if (city.includes(city2.toLowerCase())) total2 += qty;
+            });
+
+            const table = `
+    <table class="min-w-full text-sm">
+        <tr><th class="text-left pr-4">City</th><th class="text-right">Sales</th></tr>
+        <tr><td class="pr-4">${city1}</td><td class="text-right">${total1.toLocaleString()}</td></tr>
+        <tr><td class="pr-4">${city2}</td><td class="text-right">${total2.toLocaleString()}</td></tr>
+    </table>
+    `;
+
+            addMessage('Bot', 'City-wise Sales Comparison:<br>' + table);
+        }
+
+        function compareStates(state1, state2, month, year, product) {
+            const filtered = filterData(month, year, product);
+            let total1 = 0, total2 = 0;
+
+            filtered.forEach(r => {
+                const state = (r['Ship To State Text'] || '').toLowerCase();
+                const qty = +r['Net Sales Qty'] || 0;
+                if (state.includes(state1.toLowerCase())) total1 += qty;
+                if (state.includes(state2.toLowerCase())) total2 += qty;
+            });
+
+            const table = `
+    <table class="min-w-full text-sm">
+        <tr><th class="text-left pr-4">State</th><th class="text-right">Sales</th></tr>
+        <tr><td class="pr-4">${state1}</td><td class="text-right">${total1.toLocaleString()}</td></tr>
+        <tr><td class="pr-4">${state2}</td><td class="text-right">${total2.toLocaleString()}</td></tr>
+    </table>
+    `;
+
+            addMessage('Bot', 'State-wise Sales Comparison:<br>' + table);
+        }
+
+        function compareMaharashtraAndKarnataka(month, year, product) {
+            const filtered = filterData(month, year, product);
+            let totalMH = 0, totalKA = 0;
+
+            filtered.forEach(r => {
+                const state = (r['Ship To State Text'] || '').toLowerCase();
+                const qty = +r['Net Sales Qty'] || 0;
+                if (state.includes('maharashtra')) totalMH += qty;
+                if (state.includes('karnataka')) totalKA += qty;
+            });
+
+            const msg = `
+        <strong>Focus States Comparison:</strong><br>
+        Maharashtra: ${totalMH.toLocaleString()} MT<br>
+        Karnataka: ${totalKA.toLocaleString()} MT
+    `;
+            addMessage('Bot', msg);
+        }
+
+        function showProductSalesForFocusStates(month, year, product) {
+            const filtered = filterData(month, year, product);
+            const mhProducts = {};
+            const kaProducts = {};
+
+            filtered.forEach(r => {
+                const state = (r['Ship To State Text'] || '').toLowerCase();
+                const desc = r['Product Description'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (state.includes('maharashtra')) {
+                    mhProducts[desc] = (mhProducts[desc] || 0) + qty;
+                } else if (state.includes('karnataka')) {
+                    kaProducts[desc] = (kaProducts[desc] || 0) + qty;
+                }
+            });
+
+            // Combine all product names and sort by total sales (MH + KA) descending
+            const allProducts = new Set([...Object.keys(mhProducts), ...Object.keys(kaProducts)]);
+            const sortedProducts = Array.from(allProducts).sort((a, b) => {
+                const totalA = (mhProducts[a] || 0) + (kaProducts[a] || 0);
+                const totalB = (mhProducts[b] || 0) + (kaProducts[b] || 0);
+                return totalB - totalA;
+            });
+
+            let table = `
+    <h3 class="font-semibold mb-1">SKU-wise Sales in Focus States</h3>
+    <table class="min-w-full text-sm mb-4">
+        <tr>
+            <th class="text-left pr-4">Product Description</th>
+            <th class="text-right pr-4">Maharashtra</th>
+            <th class="text-right">Karnataka</th>
+        </tr>
+    `;
+
+            sortedProducts.forEach(desc => {
+                const mhQty = mhProducts[desc] || 0;
+                const kaQty = kaProducts[desc] || 0;
+                table += `
+        <tr>
+            <td class="pr-4">${desc}</td>
+            <td class="text-right pr-4">${mhQty.toLocaleString()}</td>
+            <td class="text-right">${kaQty.toLocaleString()}</td>
+        </tr>`;
+            });
+
+            table += '</table>';
+            addMessage('Bot', table);
+        }
+
+        function showSkuWiseSales(month, year, product) {
+            const filtered = filterData(month, year, product);
+            const skuSales = {};
+
+            filtered.forEach(r => {
+                const sku = r['Product Description'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+                skuSales[sku] = (skuSales[sku] || 0) + qty;
+            });
+
+            const sortedSkus = Object.entries(skuSales)
+                .sort((a, b) => b[1] - a[1]); // Sort by sales descending
+
+            let table = `
+    <h3 class="font-semibold mb-1">SKU-wise Sales</h3>
+    <table class="min-w-full text-sm mb-4">
+        <tr>
+            <th class="text-left pr-4">Product Description (SKU)</th>
+            <th class="text-right">Total Sales</th>
+        </tr>
+    `;
+
+            sortedSkus.forEach(([sku, qty]) => {
+                table += `
+        <tr>
+            <td class="pr-4">${sku}</td>
+            <td class="text-right">${qty.toLocaleString()}</td>
+        </tr>`;
+            });
+
+            table += '</table>';
+            addMessage('Bot', table);
+        }
+
+        function showSalesByDistrictAndState(month, year, product) {
+            const filtered = filterData(month, year, product);
+            const districtData = {};
+
+            filtered.forEach(r => {
+                const district = r['Sales District'] || 'Unknown';
+                const state = r['Ship To State Text'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!districtData[district]) {
+                    districtData[district] = { total: 0, states: {} };
+                }
+
+                districtData[district].total += qty;
+                districtData[district].states[state] = (districtData[district].states[state] || 0) + qty;
+            });
+
+            const sortedDistricts = Object.entries(districtData).sort((a, b) => b[1].total - a[1].total);
+
+            let msg = `<h3 class="font-semibold mb-1">Sales District-wise Breakdown (with States)</h3>`;
+
+            sortedDistricts.forEach(([district, data]) => {
+                msg += `<div class="mb-3"><strong>${district}</strong> - Total Sales: ${data.total.toLocaleString()} MT`;
+                msg += `<table class="min-w-full text-sm mt-1">
+                <tr>
+                    <th class="text-left pr-4">State</th>
+                    <th class="text-right">Sales</th>
+                </tr>`;
+                const sortedStates = Object.entries(data.states).sort((a, b) => b[1] - a[1]);
+                sortedStates.forEach(([state, qty]) => {
+                    msg += `<tr>
+                        <td class="pr-4">${state}</td>
+                        <td class="text-right">${qty.toLocaleString()}</td>
+                    </tr>`;
+                });
+                msg += `</table></div>`;
+            });
+
+            addMessage('Bot', msg);
+        }
+
+        function showStateWiseProductSales(month, year, product) {
+            const filtered = filterData(month, year, product);
+            const stateData = {};
+
+            filtered.forEach(r => {
+                const state = r['Ship To State Text'] || 'Unknown';
+                const sku = r['Product Description'] || 'Unknown';
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!stateData[state]) {
+                    stateData[state] = { total: 0, skus: {} };
+                }
+
+                stateData[state].total += qty;
+                stateData[state].skus[sku] = (stateData[state].skus[sku] || 0) + qty;
+            });
+
+            const sortedStates = Object.entries(stateData).sort((a, b) => b[1].total - a[1].total);
+
+            let msg = `<h3 class="font-semibold mb-1">State-wise Sales with Product Breakdown</h3>`;
+
+            sortedStates.forEach(([state, data]) => {
+                msg += `<div class="mb-3"><strong>${state}</strong> - Total Sales: ${data.total.toLocaleString()} MT`;
+                msg += `<table class="min-w-full text-sm mt-1">
+                <tr>
+                    <th class="text-left pr-4">Product Description</th>
+                    <th class="text-right">Sales Qty</th>
+                </tr>`;
+                const sortedSkus = Object.entries(data.skus).sort((a, b) => b[1] - a[1]);
+                sortedSkus.forEach(([sku, qty]) => {
+                    msg += `<tr>
+                        <td class="pr-4">${sku}</td>
+                        <td class="text-right">${qty.toLocaleString()}</td>
+                    </tr>`;
+                });
+                msg += `</table></div>`;
+            });
+
+            addMessage('Bot', msg);
+        }
+
+        // Utility: Add messages to chat window
+        function addMessage(sender, text) {
+            const chatWindow = document.getElementById('chatWindow');
+            const div = document.createElement('div');
+            div.className = sender === 'You' ? 'text-right mb-2' : 'text-left mb-2';
+            div.innerHTML = `<b>${sender}:</b> ${text}`;
+            chatWindow.appendChild(div);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        // This should be in the SEND button handler, NOT querySelect change
+
+        document.getElementById('sendBtn').addEventListener('click', function () {
+            const query = document.getElementById('querySelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearSelect').value;
+            const product = document.getElementById('productSelect').value;
+            const userText = document.getElementById('userInput').value.trim();
+
+            let handled = false;
+
+            switch (query) {
+                case 'sales':
+                    showSalesForSelection(month, year, product);
+                    handled = true;
+                    break;
+                case 'avg':
+                    showAverageSales(month, year, product);
+                    handled = true;
+                    break;
+                case 'monthly':
+                    showMonthlySales(year, product);
+                    handled = true;
+                    break;
+                case 'citywise':
+                    showLocationWiseSales('city', month, year, product);
+                    handled = true;
+                    break;
+                case 'statewise':
+                    showLocationWiseSales('state', month, year, product);
+                    handled = true;
+                    break;
+                case 'top5cities':
+                    showTopBottomCities(month, year, product, 'top');
+                    handled = true;
+                    break;
+                case 'top5states':
+                    showTopBottomStates(month, year, product, 'top');
+                    handled = true;
+                    break;
+                case 'bottom5cities':
+                    showTopBottomCities(month, year, product, 'bottom');
+                    handled = true;
+                    break;
+                case 'bottom5states':
+                    showTopBottomStates(month, year, product, 'bottom');
+                    handled = true;
+                    break;
+                case 'top5customers':
+                    showTopBottomCustomers(month, year, product, 'top');
+                    handled = true;
+                    break;
+                case 'bottom5customers':
+                    showTopBottomCustomers(month, year, product, 'bottom');
+                    handled = true;
+                    break;
+                case 'specificcity':
+                    if (userText) {
+                        showSpecificLocationSales(userText.toLowerCase(), month, year, product);
+                        handled = true;
+                    } else {
+                        addMessage('Bot', 'Please enter a city name.');
+                    }
+                    break;
+                case 'specificstate':
+                    if (userText) {
+                        showSpecificStateSales(userText.toLowerCase(), month, year, product);
+                        handled = true;
+                    } else {
+                        addMessage('Bot', 'Please enter a state name.');
+                    }
+                    break;
+                case 'compare':
+                    if (userText) {
+                        handleComparisonQuery(userText.toLowerCase(), product);
+                        handled = true;
+                    } else {
+                        addMessage('Bot', 'Please enter your comparison query.');
+                    }
+                    break;
+                case 'plant':
+                    showPlantPerformance(month, year, product);
+                    handled = true;
+                    break;
+                case 'top5soldto':
+                    showTopBottomSoldToParties(month, year, product, 'top');
+                    handled = true;
+                    break;
+                case 'bottom5soldto':
+                    showTopBottomSoldToParties(month, year, product, 'bottom');
+                    handled = true;
+                    break;
+                case 'topcustomersstate':
+                    showTopCustomersPerState(month, year, product);
+                    handled = true;
+                    break;
+                case 'topcustomerscity':
+                    showTopCustomersPerCity(month, year, product);
+                    handled = true;
+                    break;
+                case 'quarterly':
+                    showQuarterlySales(month, year, product);
+                    handled = true;
+                    break;
+                case 'comparecities':
+                    if (userText) {
+                        const parts = userText.split(" and ");
+                        if (parts.length === 2) {
+                            const city1 = parts[0].replace(/compare/i, '').trim();
+                            const city2 = parts[1].trim();
+                            compareCities(city1, city2, month, year, product);
+                            handled = true;
+                        } else {
+                            addMessage('Bot', 'Please enter in the format: compare City1 and City2');
+                        }
+                    } else {
+                        addMessage('Bot', 'Please enter two valid city names.');
+                    }
+                    break;
+                case 'comparestates':
+                    if (userText) {
+                        const parts = userText.split(" and ");
+                        if (parts.length === 2) {
+                            const state1 = parts[0].replace(/compare/i, '').trim();
+                            const state2 = parts[1].trim();
+                            compareStates(state1, state2, month, year, product);
+                            handled = true;
+                        } else {
+                            addMessage('Bot', 'Please enter in the format: compare State1 and State2');
+                        }
+                    } else {
+                        addMessage('Bot', 'Please enter two valid state names.');
+                    }
+                    break;
+                case 'comparestates':
+                    // Prompt for two states
+                    const state1 = prompt("Enter first state name:");
+                    const state2 = prompt("Enter second state name:");
+                    if (state1 && state2) {
+                        compareStates(state1, state2, month, year, product);
+                        handled = true;
+                    } else {
+                        addMessage('Bot', 'Please enter two valid state names.');
+                    }
+                    break;
+                case 'focusstates':
+                    compareMaharashtraAndKarnataka(month, year, product);
+                    handled = true;
+                    break;
+                case 'focusproductstates':
+                    showProductSalesForFocusStates(month, year, product);
+                    handled = true;
+                    break;
+                case 'skusales':
+                    showSkuWiseSales(month, year, product);
+                    handled = true;
+                    break;
+                case 'districtbreakdown':
+                    showSalesByDistrictAndState(month, year, product);
+                    handled = true;
+                    break;
+                case 'stateproductbreakdown':
+                    showStateWiseProductSales(month, year, product);
+                    handled = true;
+                    break;
+
+            }
+
+            // ⛔ This was missing
+            if (!handled && query === "") {
+                addMessage('Bot', "Please select a query from the drop-down or type your request.");
+            }
+        });
+
+    </script>
+</body>
+
+</html>
