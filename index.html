@@ -143,6 +143,11 @@
     </div>
 
     <script>
+           constsession = {
+        customerCompare: {},
+        awaitingCustomerName: false,
+        awaitingCustomerPeriod: false
+    };
         const fileInput = document.getElementById('fileInput');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
 
@@ -1019,19 +1024,61 @@
 
             addMessage('Bot', msg);
         }
+        const normalizeMonth = (m) => {
+    const map = {
+        jan: "Jan", january: "Jan",
+        feb: "Feb", february: "Feb",
+        mar: "Mar", march: "Mar",
+        apr: "Apr", april: "Apr",
+        may: "May",
+        jun: "Jun", june: "Jun",
+        jul: "Jul", july: "Jul",
+        aug: "Aug", august: "Aug",
+        sep: "Sep", sept: "Sep", september: "Sep",
+        oct: "Oct", october: "Oct",
+        nov: "Nov", november: "Nov",
+        dec: "Dec", december: "Dec"
+    };
+    return map[m.toLowerCase()] || m;
+};
 
         function compareCustomerSales(customerName, period1, period2, product) {
-            const getSales = (month, year) => {
-                return filterData(month, year, product)
+           const getSales = (month, year) => {
+             const normalizedMonth = month ? normalizeMonth(month) : null;
+             return filterData(normalizedMonth, year, product)
+
                     .filter(r => (r['Customer Name'] || '').toLowerCase() === customerName.toLowerCase())
                     .reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
             };
+            const p1 = { ...period1 };
+const p2 = { ...period2 };
 
-            const sales1 = getSales(period1.month, period1.year);
-            const sales2 = getSales(period2.month, period2.year);
+// Normalize month names
+p1.month = p1.month ? normalizeMonth(p1.month) : null;
+p2.month = p2.month ? normalizeMonth(p2.month) : null;
 
-            const label1 = period1.month ? `${period1.month} ${period1.year}` : period1.year;
-            const label2 = period2.month ? `${period2.month} ${period2.year}` : period2.year;
+// Helper to get a comparable number for sorting
+const getSortableValue = (p) => {
+    const monthMap = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
+    const m = p.month ? monthMap[p.month.slice(0, 3)] : 0;
+    return parseInt(p.year) * 100 + m;
+};
+
+// Sort periods chronologically
+let earlier = p1, later = p2;
+if (getSortableValue(p1) > getSortableValue(p2)) {
+    [earlier, later] = [p2, p1];
+}
+
+// Now fetch sales using sorted periods
+const sales1 = getSales(earlier.month, earlier.year);
+const sales2 = getSales(later.month, later.year);
+
+const label1 = earlier.month ? `${earlier.month.toLowerCase()} ${earlier.year}` : earlier.year;
+const label2 = later.month ? `${later.month.toLowerCase()} ${later.year}` : later.year;
+
+
+
 
             let percentChange = 'N/A';
             let colorClass = '';
@@ -1074,176 +1121,139 @@
 
         // This should be in the SEND button handler, NOT querySelect change
 
-        document.getElementById('sendBtn').addEventListener('click', function () {
-            const query = document.getElementById('querySelect').value;
-            const month = document.getElementById('monthSelect').value;
-            const year = document.getElementById('yearSelect').value;
-            const product = document.getElementById('productSelect').value;
-            const userText = document.getElementById('userInput').value.trim();
+       document.getElementById('sendBtn').addEventListener('click', handleUserRequest);
+document.getElementById('userInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') handleUserRequest();
+});
+function handleUserRequest() {
+    const query = document.getElementById('querySelect').value;
+    const month = document.getElementById('monthSelect').value;
+    const year = document.getElementById('yearSelect').value;
+    const product = document.getElementById('productSelect').value;
+    const userText = document.getElementById('userInput').value.trim();
 
-            let handled = false;
+    let handled = false;
 
-            switch (query) {
-                case 'sales':
-                    showSalesForSelection(month, year, product);
-                    handled = true;
-                    break;
-                case 'avg':
-                    showAverageSales(month, year, product);
-                    handled = true;
-                    break;
-                case 'monthly':
-                    showMonthlySales(year, product);
-                    handled = true;
-                    break;
-                case 'citywise':
-                    showLocationWiseSales('city', month, year, product);
-                    handled = true;
-                    break;
-                case 'statewise':
-                    showLocationWiseSales('state', month, year, product);
-                    handled = true;
-                    break;
-                case 'top5cities':
-                    showTopBottomCities(month, year, product, 'top');
-                    handled = true;
-                    break;
-                case 'top5states':
-                    showTopBottomStates(month, year, product, 'top');
-                    handled = true;
-                    break;
-                case 'bottom5cities':
-                    showTopBottomCities(month, year, product, 'bottom');
-                    handled = true;
-                    break;
-                case 'bottom5states':
-                    showTopBottomStates(month, year, product, 'bottom');
-                    handled = true;
-                    break;
-                case 'top5customers':
-                    showTopBottomCustomers(month, year, product, 'top');
-                    handled = true;
-                    break;
-                case 'bottom5customers':
-                    showTopBottomCustomers(month, year, product, 'bottom');
-                    handled = true;
-                    break;
-                case 'specificcity':
-                    if (userText) {
-                        showSpecificLocationSales(userText.toLowerCase(), month, year, product);
-                        handled = true;
-                    } else {
-                        addMessage('Bot', 'Please enter a city name.');
-                    }
-                    break;
-                case 'specificstate':
-                    if (userText) {
-                        showSpecificStateSales(userText.toLowerCase(), month, year, product);
-                        handled = true;
-                    } else {
-                        addMessage('Bot', 'Please enter a state name.');
-                    }
-                    break;
-                case 'compare':
-                    if (userText) {
-                        handleComparisonQuery(userText.toLowerCase(), product);
-                        handled = true;
-                    } else {
-                        addMessage('Bot', 'Please enter your comparison query.');
-                    }
-                    break;
-                case 'plant':
-                    showPlantPerformance(month, year, product);
-                    handled = true;
-                    break;
-                case 'topcustomersstate':
-                    showTopCustomersPerState(month, year, product);
-                    handled = true;
-                    break;
-                case 'topcustomerscity':
-                    showTopCustomersPerCity(month, year, product);
-                    handled = true;
-                    break;
-                case 'quarterly':
-                    showQuarterlySales(month, year, product);
-                    handled = true;
-                    break;
-                case 'comparecities':
-                    if (userText) {
-                        const parts = userText.split(" and ");
-                        if (parts.length === 2) {
-                            const city1 = parts[0].replace(/compare/i, '').trim();
-                            const city2 = parts[1].trim();
-                            compareCities(city1, city2, month, year, product);
-                            handled = true;
-                        } else {
-                            addMessage('Bot', 'Please enter in the format: compare City1 and City2');
-                        }
-                    } else {
-                        addMessage('Bot', 'Please enter two valid city names.');
-                    }
-                    break;
-                case 'comparestates':
-                    if (userText) {
-                        const parts = userText.split(" and ");
-                        if (parts.length === 2) {
-                            const state1 = parts[0].replace(/compare/i, '').trim();
-                            const state2 = parts[1].trim();
-                            compareStates(state1, state2, month, year, product);
-                            handled = true;
-                        } else {
-                            addMessage('Bot', 'Please enter in the format: compare State1 and State2');
-                        }
-                    } else {
-                        addMessage('Bot', 'Please enter two valid state names.');
-                    }
-                    break;
-                case 'comparestates':
-                    // Prompt for two states
-                    const state1 = prompt("Enter first state name:");
-                    const state2 = prompt("Enter second state name:");
-                    if (state1 && state2) {
-                        compareStates(state1, state2, month, year, product);
-                        handled = true;
-                    } else {
-                        addMessage('Bot', 'Please enter two valid state names.');
-                    }
-                    break;
-                case 'focusstates':
-                    compareMaharashtraAndKarnataka(month, year, product);
-                    handled = true;
-                    break;
-                case 'focusproductstates':
-                    showProductSalesForFocusStates(month, year, product);
-                    handled = true;
-                    break;
-                case 'skusales':
-                    showSkuWiseSales(month, year, product);
-                    handled = true;
-                    break;
-                case 'districtbreakdown':
-                    showSalesByDistrictAndState(month, year, product);
-                    handled = true;
-                    break;
-                case 'stateproductbreakdown':
-                    showStateWiseProductSales(month, year, product);
-                    handled = true;
-                    break;
-                case 'comparecustomersales':
-                    session.customerCompare = {};
-                    session.awaitingCustomerName = true;
-                    session.awaitingCustomerPeriod = false;
-                    addMessage('Bot', 'Please enter the Customer Name:');
-                    handled = true;
-                    break;
-            }
+    // Step 1: Handle customer comparison inputs
+    if (session.awaitingCustomerName && userText) {
+        session.customerCompare.name = userText;
+        session.awaitingCustomerName = false;
+        session.awaitingCustomerPeriod = 'first';
+        addMessage('Bot', 'Now enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024":');
+        document.getElementById('userInput').value = '';
+        return;
+    }
 
-            if (!handled && query === "") {
-                addMessage('Bot', "Please select a query from the drop-down or type your request.");
-            }
-        });
+    if (session.awaitingCustomerPeriod && userText) {
+    const parts = userText.toLowerCase().split(' and ');
+    if (parts.length !== 2) {
+        addMessage('Bot', 'Please enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024"');
+        return;
+    }
+
+    const extractPeriod = (str) => {
+        const tokens = str.trim().split(' ');
+        return {
+            month: tokens.length === 2 ? tokens[0] : null,
+            year: tokens.length === 2 ? tokens[1] : tokens[0]
+        };
+    };
+
+    session.customerCompare.period1 = extractPeriod(parts[0]);
+    session.customerCompare.period2 = extractPeriod(parts[1]);
+
+    compareCustomerSales(
+        session.customerCompare.name,
+        session.customerCompare.period1,
+        session.customerCompare.period2,
+        product
+    );
+    session.awaitingCustomerPeriod = false;
+    document.getElementById('userInput').value = '';
+    return;
+}
+
+
+    // Step 2: Handle regular queries
+    switch (query) {
+        case 'sales': showSalesForSelection(month, year, product); handled = true; break;
+        case 'avg': showAverageSales(month, year, product); handled = true; break;
+        case 'monthly': showMonthlySales(year, product); handled = true; break;
+        case 'citywise': showLocationWiseSales('city', month, year, product); handled = true; break;
+        case 'statewise': showLocationWiseSales('state', month, year, product); handled = true; break;
+        case 'top5cities': showTopBottomCities(month, year, product, 'top'); handled = true; break;
+        case 'top5states': showTopBottomStates(month, year, product, 'top'); handled = true; break;
+        case 'bottom5cities': showTopBottomCities(month, year, product, 'bottom'); handled = true; break;
+        case 'bottom5states': showTopBottomStates(month, year, product, 'bottom'); handled = true; break;
+        case 'top5customers': showTopBottomCustomers(month, year, product, 'top'); handled = true; break;
+        case 'bottom5customers': showTopBottomCustomers(month, year, product, 'bottom'); handled = true; break;
+        case 'specificcity':
+            if (userText) showSpecificLocationSales(userText.toLowerCase(), month, year, product);
+            else addMessage('Bot', 'Please enter a city name.');
+            handled = true;
+            break;
+        case 'specificstate':
+            if (userText) showSpecificStateSales(userText.toLowerCase(), month, year, product);
+            else addMessage('Bot', 'Please enter a state name.');
+            handled = true;
+            break;
+        case 'compare':
+            if (userText) handleComparisonQuery(userText.toLowerCase(), product);
+            else addMessage('Bot', 'Please enter your comparison query.');
+            handled = true;
+            break;
+        case 'plant': showPlantPerformance(month, year, product); handled = true; break;
+        case 'topcustomersstate': showTopCustomersPerState(month, year, product); handled = true; break;
+        case 'topcustomerscity': showTopCustomersPerCity(month, year, product); handled = true; break;
+        case 'quarterly': showQuarterlySales(month, year, product); handled = true; break;
+        case 'comparecities':
+            if (userText) {
+                const parts = userText.split(" and ");
+                if (parts.length === 2) {
+                    const city1 = parts[0].replace(/compare/i, '').trim();
+                    const city2 = parts[1].trim();
+                    compareCities(city1, city2, month, year, product);
+                    handled = true;
+                } else {
+                    addMessage('Bot', 'Please enter in the format: compare City1 and City2');
+                }
+            } else addMessage('Bot', 'Please enter two valid city names.');
+            break;
+        case 'comparestates':
+            if (userText) {
+                const parts = userText.split(" and ");
+                if (parts.length === 2) {
+                    const state1 = parts[0].replace(/compare/i, '').trim();
+                    const state2 = parts[1].trim();
+                    compareStates(state1, state2, month, year, product);
+                    handled = true;
+                } else {
+                    addMessage('Bot', 'Please enter in the format: compare State1 and State2');
+                }
+            } else addMessage('Bot', 'Please enter two valid state names.');
+            break;
+        case 'focusstates': compareMaharashtraAndKarnataka(month, year, product); handled = true; break;
+        case 'focusproductstates': showProductSalesForFocusStates(month, year, product); handled = true; break;
+        case 'skusales': showSkuWiseSales(month, year, product); handled = true; break;
+        case 'districtbreakdown': showSalesByDistrictAndState(month, year, product); handled = true; break;
+        case 'stateproductbreakdown': showStateWiseProductSales(month, year, product); handled = true; break;
+        case 'comparecustomersales':
+            session.customerCompare = {};
+            session.awaitingCustomerName = true;
+            session.awaitingCustomerPeriod = false;
+            addMessage('Bot', 'Please enter the Customer Name:');
+            handled = true;
+            break;
+    }
+
+    if (!handled && query === "") {
+        addMessage('Bot', "Please select a query from the drop-down or type your request.");
+    }
+
+    document.getElementById('userInput').value = '';
+}
+
 
     </script>
 </body>
-
 </html>
