@@ -11,143 +11,147 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
-<body class="bg-blue-900 flex flex-col items-center min-h-screen p-6 text-white">
+<body class="bg-blue-900 flex flex-col items-center min-h-screen p-6 text-white" style="padding-top: 120px;">
 
-    <div class="flex items-center gap-3 mb-6 px-6 justify-start w-full">
-        <img src="logo.jpeg" alt="Company Logo" class="w-24 h-15 rounded-md" />
-        <h1 class="text-3xl font-bold text-white tracking-wide text-center w-full">
-            Sales Data Chatbot
+    <!-- White background strip -->
+    <div class="w-full bg-white py-4 px-6 fixed top-0 left-0 z-50">
+        <div class="flex items-center gap-3 justify-start w-full max-w-screen">
+            <img src="logo.jpeg" alt="Company Logo" class="w-28 h-18 rounded-md" />
+
+        </div>
+    </div>
+
+    <!-- Title BELOW white bar -->
+    <div class="w-full bg-blue-900 text-center fixed top-20 z-20 py-4">
+        <h1 class="text-3xl font-bold text-white tracking-wide font-serif">
+            BotNova
         </h1>
     </div>
 
-    <!-- Parent container for split layout -->
-    <div class="flex flex-col w-full max-w-7xl mx-auto gap-8 mt-6">
+    <!-- Unified Horizontal Toolbar -->
+    <div class="w-full flex flex-wrap items-center justify-center gap-4 mt-10 px-6">
 
-        <div class="w-full flex flex-col items-center gap-6 px-6">
+        <!-- File Upload Button -->
+        <label for="fileInput"
+            class="w-25 h-10 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition text-center cursor-pointer flex justify-center items-center">
+            Choose file
+        </label>
 
-            <!-- Line 1: File Upload Button + File Name Display -->
-            <div class="flex items-center gap-4">
-                <!-- Choose File Button -->
-                <label for="fileInput"
-                    class="w-60 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition text-center cursor-pointer flex justify-center items-center">
-                    Choose file
-                </label>
-
-                <!-- File Name Display -->
-                <div id="fileNameDisplay"
-                    class="w-60 h-10 flex items-center px-3 bg-white border border-gray-300 rounded text-sm text-black">
-                    No file chosen
-                </div>
-
-                <!-- Hidden Real Input -->
-                <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
-            </div>
-
-            <!-- Line 2: Dropdowns -->
-            <div class="flex flex-wrap gap-2">
-                <select id="yearSelect"
-                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
-                    <option value="">Year</option>
-                </select>
-
-                <select id="monthSelect"
-                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
-                    <option value="">Month</option>
-                </select>
-
-                <select id="productSelect"
-                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
-                    <option value="">Product</option>
-                </select>
-
-                <select id="querySelect"
-                    class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
-                    <option value="">Select a Query</option>
-
-                    <optgroup label="General Sales">
-                        <option value="sales">Total Sales</option>
-                        <option value="avg">Average Sales per Customer</option>
-                        <option value="monthly">Monthly Sales</option>
-                        <option value="quarterly">Quarter-wise Sales</option>
-                    </optgroup>
-
-                    <optgroup label="Customer Insights">
-                        <option value="top5customers">Top 5 Customers</option>
-                        <option value="bottom5customers">Bottom 5 Customers</option>
-                        <option value="topcustomersstate">Top Customers per State</option>
-                        <option value="topcustomerscity">Top Customers per City</option>
-                        <option value="comparecustomersales">Compare Customer Sales</option>
-                    </optgroup>
-
-                    <optgroup label="Geographical Sales">
-                        <option value="citywise">City-wise Sales (Ship To)</option>
-                        <option value="statewise">State-wise Sales (Ship To)</option>
-                        <option value="specificcity">Sales in a Specific City (Ship To)</option>
-                        <option value="specificstate">Sales in a Specific State (Ship To)</option>
-                        <option value="top5cities">Top 5 Cities by Sales</option>
-                        <option value="bottom5cities">Bottom 5 Cities by Sales</option>
-                        <option value="top5states">Top 5 States by Sales</option>
-                        <option value="bottom5states">Bottom 5 States by Sales</option>
-                        <option value="districtbreakdown">Region-wise Breakdown</option>
-                    </optgroup>
-
-                    <optgroup label="Comparative Analysis">
-                        <option value="compare">Compare Two Periods</option>
-                        <option value="comparecities">Compare Sales Between Two Cities</option>
-                        <option value="comparestates">Compare Sales Between Two States</option>
-                    </optgroup>
-
-                    <optgroup label="Focus Areas">
-                        <option value="focusstates">Focus States</option>
-                        <option value="focusproductstates">Focus States (SKU-wise Sales)</option>
-                    </optgroup>
-
-                    <optgroup label="SKU/Product-Based Sales">
-                        <option value="skusales">SKU-wise Sales</option>
-                        <option value="stateproductbreakdown">State SKU-wise Sales</option>
-                    </optgroup>
-
-                    <optgroup label="Plant Sales">
-                        <option value="plant">Plant-wise Sales</option>
-                    </optgroup>
-                </select>
-
-
-            </div>
+        <!-- File Name Display -->
+        <div id="fileNameDisplay"
+            class="w-40 h-10 flex items-center px-3 bg-white border border-gray-300 rounded text-sm text-black">
+            No file chosen
         </div>
 
-        <!-- RIGHT SIDE: User Input + Chat Window -->
-        <div class="w-full flex justify-center px-6">
-            <div class="flex items-center gap-4">
-                <!-- Input Box -->
-                <input id="userInput"
-                    class="w-[400px] h-10 border border-gray-300 rounded px-3 text-black bg-white text-sm"
-                    placeholder="Ask me about the sales data…" />
+        <!-- Hidden File Input -->
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" />
 
+        <!-- Filter: Year -->
+        <select id="yearSelect" class="w-40 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+            <option value="">Year</option>
+        </select>
 
-                <!-- Ask Button -->
-                <button id="sendBtn"
-                    class="w-60 h-10 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition">
-                    Ask the Bot
-                </button>
-            </div>
-        </div>
+        <!-- Filter: Month -->
+        <select id="monthSelect" class="w-40 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+            <option value="">Month</option>
+        </select>
 
+        <!-- Filter: Product -->
+        <select id="productSelect"
+            class="w-40 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+            <option value="">Product</option>
+        </select>
+
+        <!-- Query Selection -->
+        <select id="querySelect" class="w-60 p-2 rounded bg-white text-black border border-gray-300 focus:outline-none">
+            <option value="">Select a Query</option>
+
+            <optgroup label="Insights">
+                <option value="nonfocusplants">Plant Sales to Non-Focus States</option>
+                <option value="avg">Average Sales per Customer</option>
+                <option value="top5customers">Top 5 Customers</option>
+                <option value="bottom5customers">Bottom 5 Customers</option>
+                <option value="topcustomersstate">Top Customers per State</option>
+                <option value="topcustomerscity">Top Customers per City</option>
+                <option value="comparecustomersales">Compare Customer Sales</option>
+                <option value="top5cities">Top 5 Cities by Sales</option>
+                <option value="bottom5cities">Bottom 5 Cities by Sales</option>
+                <option value="top5states">Top 5 States by Sales</option>
+                <option value="bottom5states">Bottom 5 States by Sales</option>
+                <option value="compare">Compare Two Periods</option>
+                <option value="comparecities">Compare Sales Between Two Cities</option>
+                <option value="comparestates">Compare Sales Between Two States</option>
+            </optgroup>
+
+            <optgroup label="General Sales">
+                <option value="sales">Total Sales</option>
+                <option value="monthly">Monthly Sales</option>
+                <option value="quarterly">Quarter-wise Sales</option>
+            </optgroup>
+
+            <optgroup label="Detailed Geographic Sales">
+                <option value="citywise">City-wise Sales (Ship To)</option>
+                <option value="statewise">State-wise Sales (Ship To)</option>
+                <option value="specificcity">Sales in a Specific City (Ship To)</option>
+                <option value="specificstate">Sales in a Specific State (Ship To)</option>
+                <option value="districtbreakdown">Region-wise Breakdown</option>
+            </optgroup>
+
+            <optgroup label="Focus Areas">
+                <option value="focusstates">Focus States</option>
+                <option value="focusproductstates">Focus States (SKU-wise Sales)</option>
+            </optgroup>
+
+            <optgroup label="SKU/Product-Based Sales">
+                <option value="skusales">SKU-wise Sales</option>
+                <option value="stateproductbreakdown">State SKU-wise Sales</option>
+            </optgroup>
+
+            <optgroup label="Plant Sales">
+                <option value="plant">Plant-wise Sales</option>
+            </optgroup>
+        </select>
+
+        <!-- Ask the Bot Button -->
+        <button id="sendBtn"
+            class="w-25 h-10 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded font-semibold transition">
+            Ask the Bot
+        </button>
+
+        <!-- User Manual Button -->
+        <button
+            onclick="window.open('https://jsw-my.sharepoint.com/:w:/g/personal/satyen_shah_jsw_in/EcxFXo5GYrlKhaOwr_ESqPcB7dS4q0KvslHtmDN0XyZDJg?e=9gOnRR', '_blank')"
+            class="fixed bottom-20 right-4 bg-gray-600 text-white px-3 py-2 rounded-full shadow hover:bg-gray-700 z-50"
+            title="User Manual">
+            📝
+        </button>
+
+        <!-- Sample Data Button -->
+        <button
+            onclick="window.open('https://jsw-my.sharepoint.com/:x:/g/personal/satyen_shah_jsw_in/EWcRCojMPkFKiMfB2eLOadEBmjBkDNjSMnJRCo_WrJh5wA?e=qG4Sgn', '_blank')"
+            class="fixed bottom-6 right-4 bg-gray-600 text-white px-3 py-2 rounded-full shadow hover:bg-gray-700 z-50"
+            title="Sample Data">
+            📊
+        </button>
+
+        <!-- Hidden User Input -->
+        <input id="userInput" class="hidden" placeholder="Ask me about the sales data…" />
     </div>
+
 
     <!-- Bigger Chat Window -->
     <div id="chatWindow"
-        class="w-[1100px] mt-6 h-[350px] overflow-y-auto bg-white border border-gray-200 shadow rounded p-5 mb-4 text-base text-black">
+        class="w-[1250px] mt-8 h-[450px] overflow-y-auto bg-white border border-gray-200 shadow rounded p-5 mb-4 text-base text-black">
         <!-- Chat messages appear here -->
     </div>
     </div>
 
     <script>
-           constsession = {
-        customerCompare: {},
-        awaitingCustomerName: false,
-        awaitingCustomerPeriod: false
-    };
+        constsession = {
+            customerCompare: {},
+            awaitingCustomerName: false,
+            awaitingCustomerPeriod: false
+        };
         const fileInput = document.getElementById('fileInput');
         const fileNameDisplay = document.getElementById('fileNameDisplay');
 
@@ -182,12 +186,15 @@
                         products.add(r['Product  Hierarchy - Product Variant']);
                     }
                 });
-
+                const sortedYears = Array.from(years).sort((a, b) => b - a);
                 populateSelect('yearSelect', years);
+                if (sortedYears.length > 0) {
+                    document.getElementById('yearSelect').value = sortedYears[0];
+                }
                 populateSelect('monthSelect', months);
                 populateSelect('productSelect', products);
 
-                addMessage('Bot', 'File loaded! You can now use filters or ask questions.');
+                addMessage('Bot', 'File loaded! You can now use filters and ask questions.');
             };
             reader.readAsArrayBuffer(file);
         });
@@ -364,8 +371,6 @@
                 }
             }
 
-
-
             if (!handled && query === "") {
                 addMessage('Bot', "Please select a query from the drop-down or type your request.");
             }
@@ -382,6 +387,7 @@
         document.getElementById('userInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') handleUserRequest();
         });
+        document.getElementById('sendBtn').addEventListener('click', handleUserRequest);
 
         // Filter sales data by selected filters
         function filterData(month, year, product) {
@@ -401,25 +407,42 @@
         }
 
         // Show top/bottom 5 customers based on sales quantity
-        function showTopBottomCustomers(month, year, product, type) {
+        function showTopBottomCustomers(month, year, product, type = 'top') {
             const filtered = filterData(month, year, product);
-            if (!filtered.length) return addMessage('Bot', 'No customer data found.');
-
             const customerSales = {};
+
             filtered.forEach(r => {
+                const code = r['Sold To Party'] || 'Unknown';
                 const name = r['Customer Name'] || 'Unknown';
-                customerSales[name] = (customerSales[name] || 0) + (+r['Net Sales Qty'] || 0);
+                const qty = +r['Net Sales Qty'] || 0;
+
+                if (!customerSales[code]) {
+                    customerSales[code] = { name, qty: 0 };
+                }
+                customerSales[code].qty += qty;
             });
 
-            const sorted = Object.entries(customerSales).sort((a, b) => b[1] - a[1]);
-            const selected = type === 'top' ? sorted.slice(0, 5) : sorted.slice(-5).reverse();
+            let sorted = Object.entries(customerSales).sort((a, b) => b[1].qty - a[1].qty);
+            sorted = type === 'bottom' ? sorted.slice(-5) : sorted.slice(0, 5);
 
-            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">Customer</th><th class="text-right">Sales</th></tr>`;
-            selected.forEach(([name, val]) => {
-                table += `<tr><td class="pr-4">${name}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+            let msg = `<h3 class="font-semibold mb-1">${type === 'top' ? 'Top' : 'Bottom'} 5 Customers</h3>`;
+            msg += `<table class="min-w-full text-sm mb-4 border border-black border-collapse">
+
+    <tr style="background-color: #f3f4f6;">
+            <th class="border border-black px-2 py-1">Customer Name</th>
+            <th class="border border-black px-2 py-1">Customer Code</th>
+            <th class="border border-black px-2 py-1">Sales Qty (MT)</th>
+        </tr>`;
+            sorted.forEach(([code, data]) => {
+                msg += `<tr>
+            <td class="border border-black px-2 py-1">${data.name}</td>
+            <td class="border border-black px-2 py-1">${code}</td>
+            <td class="border border-black px-2 py-1">${data.qty.toLocaleString()}</td>
+        </tr>`;
             });
-            table += '</table>';
-            addMessage('Bot', `${type === 'top' ? 'Top' : 'Bottom'} 5 Customers:<br>${table}`);
+            msg += `</table>`;
+
+            addMessage('Bot', msg);
         }
 
         function showTopBottomStates(month, year, product, type = 'top') {
@@ -437,9 +460,9 @@
             const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 States`;
 
             let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
-            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">State</th><th class="text-right">Sales</th></tr>`;
+            table += `<table class="min-w-full text-sm mb-4 border border-black border-collapse"><tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">State</th><th class="border border-black px-2 py-1">Sales</th></tr>`;
             selectedStates.forEach(([state, val]) => {
-                table += `<tr><td class="pr-4">${state}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">${state}</td><td class="border border-black px-2 py-1">${val.toLocaleString()}</td></tr>`;
             });
             table += '</table>';
 
@@ -461,9 +484,9 @@
             const title = `${type === 'top' ? 'Top' : 'Bottom'} 5 Cities`;
 
             let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
-            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">City</th><th class="text-right">Sales</th></tr>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">City</th><th class="border border-black px-2 py-1">Sales</th></tr>`;
             selectedCities.forEach(([city, val]) => {
-                table += `<tr><td class="pr-4">${city}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">${city}</td><td class="border border-black px-2 py-1">${val.toLocaleString()}</td></tr>`;
             });
             table += '</table>';
 
@@ -497,44 +520,39 @@
             const sorted = Object.entries(locSales).sort((a, b) => b[1] - a[1]);
             if (!sorted.length) return addMessage('Bot', `No ${type}-wise data found.`);
 
-            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">${type.charAt(0).toUpperCase() + type.slice(1)}</th><th class="text-right">Sales</th></tr>`;
+            let table = `<table class="min-w-full text-sm"><tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">${type.charAt(0).toUpperCase() + type.slice(1)}</th><th class="border border-black px-2 py-1">Sales</th></tr>`;
             sorted.forEach(([loc, qty]) => {
-                table += `<tr><td class="pr-4">${loc}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">${loc}</td><td class="border border-black px-2 py-1">${qty.toLocaleString()}</td></tr>`;
             });
             table += '</table>';
-            addMessage('Bot', `${type.charAt(0).toUpperCase() + type.slice(1)}-wise Sales:<br>${table}`);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">${type.charAt(0).toUpperCase() + type.slice(1)}-wise Sales</h3>` + table);
+
         }
 
         // Show total sales for a specific city
         function showSpecificLocationSales(queryCity, month, year, product) {
             const filtered = filterData(month, year, product);
-            let total = 0, matched = '';
-            filtered.forEach(r => {
-                const city = (r['Ship To City'] || '').toLowerCase();
-                if (city.includes(queryCity)) {
-                    total += (+r['Net Sales Qty'] || 0);
-                    matched = r['Ship To City'];
-                }
-            });
-            addMessage('Bot', total
-                ? `Total sales in ${matched}: ${total.toLocaleString()} MT`
-                : `No sales data found for "${queryCity}".`);
+            const lowerQuery = queryCity.toLowerCase();
+            const match = filtered.find(r => (r['Ship To City'] || '').toLowerCase() === lowerQuery);
+            if (!match) return addMessage('Bot', `No sales data found for "${queryCity}".`);
+            const city = match['Ship To City'];
+            const total = filtered
+                .filter(r => (r['Ship To City'] || '').toLowerCase() === lowerQuery)
+                .reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            addMessage('Bot', `Total sales in ${city}: ${total.toLocaleString()} MT`);
         }
 
         // Show total sales for a specific state
         function showSpecificStateSales(queryState, month, year, product) {
             const filtered = filterData(month, year, product);
-            let total = 0, matched = '';
-            filtered.forEach(r => {
-                const state = (r['Ship To State Text'] || '').toLowerCase();
-                if (state.includes(queryState)) {
-                    total += (+r['Net Sales Qty'] || 0);
-                    matched = r['Ship To State Text'];
-                }
-            });
-            addMessage('Bot', total
-                ? `Total sales in ${matched}: ${total.toLocaleString()} MT`
-                : `No sales data found for "${queryState}".`);
+            const lowerQuery = queryState.toLowerCase();
+            const match = filtered.find(r => (r['Ship To State Text'] || '').toLowerCase() === lowerQuery);
+            if (!match) return addMessage('Bot', `No sales data found for "${queryState}".`);
+            const state = match['Ship To State Text'];
+            const total = filtered
+                .filter(r => (r['Ship To State Text'] || '').toLowerCase() === lowerQuery)
+                .reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            addMessage('Bot', `Total sales in ${state}: ${total.toLocaleString()} MT`);
         }
 
         // Map month names to standard abbreviations
@@ -583,8 +601,45 @@
 
         // Compare two specific month-year periods
         function compareSales(month1, year1, month2, year2, product) {
-            const sales1 = filterData(month1, year1, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
-            const sales2 = filterData(month2, year2, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            const normalizeMonth = (m) => {
+                const map = {
+                    jan: "Jan", january: "Jan", feb: "Feb", february: "Feb",
+                    mar: "Mar", march: "Mar", apr: "Apr", april: "Apr",
+                    may: "May", jun: "Jun", june: "Jun", jul: "Jul", july: "Jul",
+                    aug: "Aug", august: "Aug", sep: "Sep", sept: "Sep", september: "Sep",
+                    oct: "Oct", october: "Oct", nov: "Nov", november: "Nov",
+                    dec: "Dec", december: "Dec"
+                };
+                return m ? map[m.toLowerCase()] || m : null;
+            };
+
+            const getSortableValue = (month, year) => {
+                const monthOrder = {
+                    Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
+                    Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12
+                };
+                const m = month ? monthOrder[month] : 0;
+                return parseInt(year) * 100 + m;
+            };
+
+            const m1 = normalizeMonth(month1);
+            const m2 = normalizeMonth(month2);
+
+            const key1 = getSortableValue(m1, year1);
+            const key2 = getSortableValue(m2, year2);
+
+            let earlier = { month: m1, year: year1 };
+            let later = { month: m2, year: year2 };
+
+            if (key1 > key2) {
+                [earlier, later] = [later, earlier];
+            }
+
+            const sales1 = filterData(earlier.month, earlier.year, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+            const sales2 = filterData(later.month, later.year, product).reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
+
+            const label1 = earlier.month ? `${earlier.month} ${earlier.year}` : earlier.year;
+            const label2 = later.month ? `${later.month} ${later.year}` : later.year;
 
             let percentChange = 'N/A';
             let colorClass = '';
@@ -597,15 +652,15 @@
             }
 
             const table = `
-    <table class="min-w-full text-sm">
-      <tr><th class="text-left pr-4">Month-Year</th><th class="text-right">Sales</th></tr>
-      <tr><td class="pr-4">${month1} ${year1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
-      <tr><td class="pr-4">${month2} ${year2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
-    </table>
-    <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
-  `;
+        <table class="min-w-full text-sm">
+          <tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">Period</th><th class="border border-black px-2 py-1">Sales</th></tr>
+          <tr><td class="border border-black px-2 py-1">${label1}</td><td class="border border-black px-2 py-1">${sales1.toLocaleString()}</td></tr>
+          <tr><td class="border border-black px-2 py-1">${label2}</td><td class="border border-black px-2 py-1">${sales2.toLocaleString()}</td></tr>
+        </table>
+        <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
+    `;
 
-            addMessage('Bot', 'Month-wise Sales Comparison:<br>' + table);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">Month-wise Sales Comparison</h3>` + table);
         }
 
         // Compare total sales between two years
@@ -625,14 +680,15 @@
 
             const table = `
     <table class="min-w-full text-sm">
-      <tr><th class="text-left pr-4">Year</th><th class="text-right">Sales</th></tr>
-      <tr><td class="pr-4">${year1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
-      <tr><td class="pr-4">${year2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
+      <tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">Year</th><th class="border border-black px-2 py-1">Sales</th></tr>
+      <tr><td class="border border-black px-2 py-1">${year1}</td><td class="border border-black px-2 py-1">${sales1.toLocaleString()}</td></tr>
+      <tr><td class="border border-black px-2 py-1">${year2}</td><td class="border border-black px-2 py-1">${sales2.toLocaleString()}</td></tr>
     </table>
     <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
   `;
 
-            addMessage('Bot', 'Year-wise Sales Comparison:<br>' + table);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">Year-wise Sales Comparison</h3>` + table);
+
         }
 
         // Show monthly sales for a given year
@@ -654,13 +710,14 @@
             );
 
             // Create HTML table
-            let table = `<table class="min-w-full text-sm"><tr><th class="text-left pr-4">Month</th><th class="text-right">Sales Qty</th></tr>`;
+            let table = `<table class="min-w-full text-sm"><tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">Month</th><th class="border border-black px-2 py-1">Sales Qty</th></tr>`;
             sorted.forEach(([month, qty]) => {
-                table += `<tr><td class="pr-4">${month}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">${month}</td><td class="border border-black px-2 py-1">${qty.toLocaleString()}</td></tr>`;
             });
             table += `</table>`;
 
-            addMessage('Bot', `Monthly Sales for ${year}:<br>${table}`);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">Monthly Sales for ${year}</h3>` + table);
+
         }
 
         function showPlantPerformance(month, year, product) {
@@ -693,85 +750,134 @@
             ].filter(Boolean).join(', ')})`;
 
             let table = `<h3 class="font-semibold mb-1">${title}</h3>`;
-            table += `<table class="min-w-full text-sm mb-4">
-              <tr>
-                <th class="text-left pr-4">Plant Name</th>
-                <th class="text-right">Net Sales Qty</th>
+            table += `<table class="min-w-full text-sm mb-4 border border-black border-collapse">
+              <tr style="background-color: #f3f4f6;">
+                <th class="border border-black px-2 py-1">Plant Name</th>
+                <th class="border border-black px-2 py-1">Net Sales Qty</th>
               </tr>`;
             allPlants.forEach(([plant, qty]) => {
-                table += `<tr><td class="pr-4">${plant}</td><td class="text-right">${qty.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">${plant}</td><td class="border border-black px-2 py-1">${qty.toLocaleString()}</td></tr>`;
             });
             table += `</table>`;
 
             addMessage('Bot', table);
+
         }
 
         function showTopCustomersPerState(month, year, product) {
             const filtered = filterData(month, year, product);
-            if (!filtered.length) return addMessage('Bot', 'No data found.');
+            const stateCustomerMap = {};
 
-            const grouped = {};
-
+            // Group customer sales per state
             filtered.forEach(r => {
                 const state = r['Ship To State Text'] || 'Unknown';
-                const customer = r['Customer Name'] || 'Unknown';
+                const name = r['Customer Name'] || 'Unknown';
+                const code = r['Sold To Party'] || 'N/A';
                 const qty = +r['Net Sales Qty'] || 0;
 
-                if (!grouped[state]) grouped[state] = {};
-                grouped[state][customer] = (grouped[state][customer] || 0) + qty;
+                if (!stateCustomerMap[state]) stateCustomerMap[state] = {};
+                if (!stateCustomerMap[state][name]) {
+                    stateCustomerMap[state][name] = { code: code, qty: 0 };
+                }
+                stateCustomerMap[state][name].qty += qty;
             });
 
-            // Collect top customers per state
-            const topCustomers = [];
-            for (const state in grouped) {
-                const [customer, qty] = Object.entries(grouped[state])
-                    .sort((a, b) => b[1] - a[1])[0];
-                topCustomers.push({ state, customer, qty });
-            }
+            // Get top customer per state
+            const topCustomers = Object.entries(stateCustomerMap).map(([state, customers]) => {
+                const sorted = Object.entries(customers).sort((a, b) => b[1].qty - a[1].qty);
+                const [custName, info] = sorted[0]; // only top
+                return {
+                    state,
+                    customer: custName,
+                    code: info.code,
+                    qty: info.qty
+                };
+            });
 
-            // Sort by quantity descending
+            // Sort by sales qty descending
             topCustomers.sort((a, b) => b.qty - a.qty);
 
-            let table = `<h3 class="font-semibold mb-1">Top Customers per State</h3>`;
-            topCustomers.forEach(entry => {
-                table += `<p><strong>${entry.state}</strong>: ${entry.customer} - ${entry.qty.toLocaleString()} MT</p>`;
+            // Build HTML table
+            let msg = `<h3 class="font-semibold mb-1">Top Customers per State</h3>
+    <table class="min-w-full text-sm mb-4 border border-black border-collapse">
+        <tr style="background-color: #f3f4f6;">
+            <th class="border border-black px-2 py-1">State</th>
+            <th class="border border-black px-2 py-1">Customer Name</th>
+            <th class="border border-black px-2 py-1">Customer Code</th>
+            <th class="border border-black px-2 py-1">Sales Qty (MT)</th>
+        </tr>`;
+
+            topCustomers.forEach(row => {
+                msg += `
+        <tr>
+            <td class="border border-black px-2 py-1">${row.state}</td>
+            <td class="border border-black px-2 py-1">${row.customer}</td>
+            <td class="border border-black px-2 py-1">${row.code}</td>
+            <td class="border border-black px-2 py-1">${row.qty.toLocaleString()}</td>
+        </tr>`;
             });
 
-            addMessage('Bot', table);
+            msg += '</table>';
+            addMessage('Bot', msg);
         }
+
+
 
         function showTopCustomersPerCity(month, year, product) {
             const filtered = filterData(month, year, product);
-            if (!filtered.length) return addMessage('Bot', 'No data found.');
+            const cityCustomerMap = {};
 
-            const grouped = {};
-
+            // Aggregate customer sales per city
             filtered.forEach(r => {
                 const city = r['Ship To City'] || 'Unknown';
-                const customer = r['Customer Name'] || 'Unknown';
+                const name = r['Customer Name'] || 'Unknown';
+                const code = r['Sold To Party'] || 'N/A';
                 const qty = +r['Net Sales Qty'] || 0;
 
-                if (!grouped[city]) grouped[city] = {};
-                grouped[city][customer] = (grouped[city][customer] || 0) + qty;
+                if (!cityCustomerMap[city]) cityCustomerMap[city] = {};
+                if (!cityCustomerMap[city][name]) {
+                    cityCustomerMap[city][name] = { code: code, qty: 0 };
+                }
+                cityCustomerMap[city][name].qty += qty;
             });
 
-            // Collect top customers per city
-            const topCustomers = [];
-            for (const city in grouped) {
-                const [customer, qty] = Object.entries(grouped[city])
-                    .sort((a, b) => b[1] - a[1])[0];
-                topCustomers.push({ city, customer, qty });
-            }
+            // Get top customer per city
+            const topCustomers = Object.entries(cityCustomerMap).map(([city, customers]) => {
+                const sorted = Object.entries(customers).sort((a, b) => b[1].qty - a[1].qty);
+                const [custName, info] = sorted[0]; // only top
+                return {
+                    city,
+                    customer: custName,
+                    code: info.code,
+                    qty: info.qty
+                };
+            });
 
-            // Sort by quantity descending
+            // Sort by sales qty in descending order
             topCustomers.sort((a, b) => b.qty - a.qty);
 
-            let table = `<h3 class="font-semibold mb-1">Top Customers per City</h3>`;
-            topCustomers.forEach(entry => {
-                table += `<p><strong>${entry.city}</strong>: ${entry.customer} - ${entry.qty.toLocaleString()} MT</p>`;
+            // Build HTML table
+            let msg = `<h3 class="font-semibold mb-1">Top Customers per City</h3>
+    <table class="min-w-full text-sm mb-4 border border-black border-collapse">
+        <tr style="background-color: #f3f4f6;">
+            <th class="border border-black px-2 py-1">City</th>
+            <th class="border border-black px-2 py-1">Customer Name</th>
+            <th class="border border-black px-2 py-1">Customer Code</th>
+            <th class="border border-black px-2 py-1">Sales Qty (MT)</th>
+        </tr>`;
+
+            topCustomers.forEach(row => {
+                msg += `
+        <tr>
+            <td class="border border-black px-2 py-1">${row.city}</td>
+            <td class="border border-black px-2 py-1">${row.customer}</td>
+            <td class="border border-black px-2 py-1">${row.code}</td>
+            <td class="border border-black px-2 py-1">${row.qty.toLocaleString()}</td>
+        </tr>`;
             });
 
-            addMessage('Bot', table);
+            msg += '</table>';
+            addMessage('Bot', msg);
         }
 
         function showQuarterlySales(month, year, product) {
@@ -787,9 +893,9 @@
             const sorted = Object.entries(quarterSales).sort((a, b) => a[0] - b[0]);
 
             let table = `<h3 class="font-semibold mb-1">Quarter-wise Sales</h3>`;
-            table += `<table class="min-w-full text-sm mb-4"><tr><th class="text-left pr-4">Quarter</th><th class="text-right">Sales</th></tr>`;
+            table += `<table class="min-w-full text-sm mb-4"><tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">Quarter</th><th class="border border-black px-2 py-1">Sales</th></tr>`;
             sorted.forEach(([qtr, val]) => {
-                table += `<tr><td class="pr-4">Q${qtr}</td><td class="text-right">${val.toLocaleString()}</td></tr>`;
+                table += `<tr><td class="border border-black px-2 py-1">Q${qtr}</td><td class="border border-black px-2 py-1">${val.toLocaleString()}</td></tr>`;
             });
             table += '</table>';
 
@@ -809,13 +915,14 @@
 
             const table = `
     <table class="min-w-full text-sm">
-        <tr><th class="text-left pr-4">City</th><th class="text-right">Sales</th></tr>
-        <tr><td class="pr-4">${city1}</td><td class="text-right">${total1.toLocaleString()}</td></tr>
-        <tr><td class="pr-4">${city2}</td><td class="text-right">${total2.toLocaleString()}</td></tr>
+        <tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">City</th><th class="border border-black px-2 py-1">Sales</th></tr>
+        <tr><td class="border border-black px-2 py-1">${city1}</td><td class="border border-black px-2 py-1">${total1.toLocaleString()}</td></tr>
+        <tr><td class="border border-black px-2 py-1">${city2}</td><td class="border border-black px-2 py-1">${total2.toLocaleString()}</td></tr>
     </table>
     `;
 
-            addMessage('Bot', 'City-wise Sales Comparison:<br>' + table);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">City-wise Sales Comparison</h3>` + table);
+
         }
 
         function compareStates(state1, state2, month, year, product) {
@@ -831,13 +938,13 @@
 
             const table = `
     <table class="min-w-full text-sm">
-        <tr><th class="text-left pr-4">State</th><th class="text-right">Sales</th></tr>
-        <tr><td class="pr-4">${state1}</td><td class="text-right">${total1.toLocaleString()}</td></tr>
-        <tr><td class="pr-4">${state2}</td><td class="text-right">${total2.toLocaleString()}</td></tr>
+        <tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">State</th><th class="border border-black px-2 py-1">Sales</th></tr>
+        <tr><td class="border border-black px-2 py-1">${state1}</td><td class="border border-black px-2 py-1">${total1.toLocaleString()}</td></tr>
+        <tr><td class="border border-black px-2 py-1">${state2}</td><td class="border border-black px-2 py-1">${total2.toLocaleString()}</td></tr>
     </table>
     `;
 
-            addMessage('Bot', 'State-wise Sales Comparison:<br>' + table);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">State-wise Sales Comparison</h3>` + table);
         }
 
         function compareMaharashtraAndKarnataka(month, year, product) {
@@ -852,11 +959,11 @@
             });
 
             const msg = `
-        <strong>Focus States Comparison:</strong><br>
         Maharashtra: ${totalMH.toLocaleString()} MT<br>
         Karnataka: ${totalKA.toLocaleString()} MT
     `;
-            addMessage('Bot', msg);
+            addMessage('Bot', `<h3 class="font-semibold mb-1">Focus States Comparison</h3><div>${msg}</div>`);
+
         }
 
         function showProductSalesForFocusStates(month, year, product) {
@@ -886,11 +993,11 @@
 
             let table = `
     <h3 class="font-semibold mb-1">SKU-wise Sales in Focus States</h3>
-    <table class="min-w-full text-sm mb-4">
-        <tr>
-            <th class="text-left pr-4">Product Description</th>
-            <th class="text-right pr-4">Maharashtra</th>
-            <th class="text-right">Karnataka</th>
+    <table class="min-w-full text-sm mb-4 border border-black border-collapse">
+        <tr style="background-color: #f3f4f6;">
+            <th class="border border-black px-2 py-1">Product Description</th>
+            <th class="border border-black px-2 py-1">Maharashtra</th>
+            <th class="border border-black px-2 py-1">Karnataka</th>
         </tr>
     `;
 
@@ -899,9 +1006,9 @@
                 const kaQty = kaProducts[desc] || 0;
                 table += `
         <tr>
-            <td class="pr-4">${desc}</td>
-            <td class="text-right pr-4">${mhQty.toLocaleString()}</td>
-            <td class="text-right">${kaQty.toLocaleString()}</td>
+            <td class="border border-black px-2 py-1">${desc}</td>
+            <td class="border border-black px-2 py-1">${mhQty.toLocaleString()}</td>
+            <td class="border border-black px-2 py-1">${kaQty.toLocaleString()}</td>
         </tr>`;
             });
 
@@ -924,18 +1031,18 @@
 
             let table = `
     <h3 class="font-semibold mb-1">SKU-wise Sales</h3>
-    <table class="min-w-full text-sm mb-4">
-        <tr>
-            <th class="text-left pr-4">Product Description (SKU)</th>
-            <th class="text-right">Total Sales</th>
+    <table class="min-w-full text-sm mb-4 border border-black border-collapse">
+        <tr style="background-color: #f3f4f6;">
+            <th class="border border-black px-2 py-1">Product Description (SKU)</th>
+            <th class="border border-black px-2 py-1">Total Sales</th>
         </tr>
     `;
 
             sortedSkus.forEach(([sku, qty]) => {
                 table += `
         <tr>
-            <td class="pr-4">${sku}</td>
-            <td class="text-right">${qty.toLocaleString()}</td>
+            <td class="border border-black px-2 py-1">${sku}</td>
+            <td class="border border-black px-2 py-1">${qty.toLocaleString()}</td>
         </tr>`;
             });
 
@@ -965,17 +1072,17 @@
             let msg = `<h3 class="font-semibold mb-1">Sales District-wise Breakdown (with States)</h3>`;
 
             sortedDistricts.forEach(([district, data]) => {
-                msg += `<div class="mb-3"><strong>${district}</strong> - Total Sales: ${data.total.toLocaleString()} MT`;
+                msg += `<div class="mb-3"><strong>${district}</strong> - <span style="font-weight: bold; background-color: #facc15; padding: 2px 6px; border-radius: 4px;"> Total Sales: ${data.total.toLocaleString()} MT</span>`;
                 msg += `<table class="min-w-full text-sm mt-1">
-                <tr>
-                    <th class="text-left pr-4">State</th>
-                    <th class="text-right">Sales</th>
+                <tr style="background-color: #f3f4f6;">
+                    <th class="border border-black px-2 py-1">State</th>
+                    <th class="border border-black px-2 py-1">Sales</th>
                 </tr>`;
                 const sortedStates = Object.entries(data.states).sort((a, b) => b[1] - a[1]);
                 sortedStates.forEach(([state, qty]) => {
                     msg += `<tr>
-                        <td class="pr-4">${state}</td>
-                        <td class="text-right">${qty.toLocaleString()}</td>
+                        <td class="border border-black px-2 py-1">${state}</td>
+                        <td class="border border-black px-2 py-1">${qty.toLocaleString()}</td>
                     </tr>`;
                 });
                 msg += `</table></div>`;
@@ -1006,17 +1113,17 @@
             let msg = `<h3 class="font-semibold mb-1">State-wise Sales with Product Breakdown</h3>`;
 
             sortedStates.forEach(([state, data]) => {
-                msg += `<div class="mb-3"><strong>${state}</strong> - Total Sales: ${data.total.toLocaleString()} MT`;
+                msg += `<div class="mt-4 mb-3"><strong>${state}</strong> - <span style="font-weight: bold; background-color: #facc15; padding: 2px 6px; border-radius: 4px;">Total Sales: ${data.total.toLocaleString()} MT</span></div>`;
                 msg += `<table class="min-w-full text-sm mt-1">
-                <tr>
-                    <th class="text-left pr-4">Product Description</th>
-                    <th class="text-right">Sales Qty</th>
+                <tr style="background-color: #f3f4f6;">
+                    <th class="border border-black px-2 py-1">Product Description</th>
+                    <th class="border border-black px-2 py-1">Sales Qty</th>
                 </tr>`;
                 const sortedSkus = Object.entries(data.skus).sort((a, b) => b[1] - a[1]);
                 sortedSkus.forEach(([sku, qty]) => {
                     msg += `<tr>
-                        <td class="pr-4">${sku}</td>
-                        <td class="text-right">${qty.toLocaleString()}</td>
+                        <td class="border border-black px-2 py-1">${sku}</td>
+                        <td class="border border-black px-2 py-1">${qty.toLocaleString()}</td>
                     </tr>`;
                 });
                 msg += `</table></div>`;
@@ -1025,60 +1132,57 @@
             addMessage('Bot', msg);
         }
         const normalizeMonth = (m) => {
-    const map = {
-        jan: "Jan", january: "Jan",
-        feb: "Feb", february: "Feb",
-        mar: "Mar", march: "Mar",
-        apr: "Apr", april: "Apr",
-        may: "May",
-        jun: "Jun", june: "Jun",
-        jul: "Jul", july: "Jul",
-        aug: "Aug", august: "Aug",
-        sep: "Sep", sept: "Sep", september: "Sep",
-        oct: "Oct", october: "Oct",
-        nov: "Nov", november: "Nov",
-        dec: "Dec", december: "Dec"
-    };
-    return map[m.toLowerCase()] || m;
-};
+            const map = {
+                jan: "Jan", january: "Jan",
+                feb: "Feb", february: "Feb",
+                mar: "Mar", march: "Mar",
+                apr: "Apr", april: "Apr",
+                may: "May",
+                jun: "Jun", june: "Jun",
+                jul: "Jul", july: "Jul",
+                aug: "Aug", august: "Aug",
+                sep: "Sep", sept: "Sep", september: "Sep",
+                oct: "Oct", october: "Oct",
+                nov: "Nov", november: "Nov",
+                dec: "Dec", december: "Dec"
+            };
+            return map[m.toLowerCase()] || m;
+        };
 
         function compareCustomerSales(customerName, period1, period2, product) {
-           const getSales = (month, year) => {
-             const normalizedMonth = month ? normalizeMonth(month) : null;
-             return filterData(normalizedMonth, year, product)
+            const getSales = (month, year) => {
+                const normalizedMonth = month ? normalizeMonth(month) : null;
+                return filterData(normalizedMonth, year, product)
 
                     .filter(r => (r['Customer Name'] || '').toLowerCase() === customerName.toLowerCase())
                     .reduce((sum, r) => sum + (+r['Net Sales Qty'] || 0), 0);
             };
             const p1 = { ...period1 };
-const p2 = { ...period2 };
+            const p2 = { ...period2 };
 
-// Normalize month names
-p1.month = p1.month ? normalizeMonth(p1.month) : null;
-p2.month = p2.month ? normalizeMonth(p2.month) : null;
+            // Normalize month names
+            p1.month = p1.month ? normalizeMonth(p1.month) : null;
+            p2.month = p2.month ? normalizeMonth(p2.month) : null;
 
-// Helper to get a comparable number for sorting
-const getSortableValue = (p) => {
-    const monthMap = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
-    const m = p.month ? monthMap[p.month.slice(0, 3)] : 0;
-    return parseInt(p.year) * 100 + m;
-};
+            // Helper to get a comparable number for sorting
+            const getSortableValue = (p) => {
+                const monthMap = { Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6, Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12 };
+                const m = p.month ? monthMap[p.month.slice(0, 3)] : 0;
+                return parseInt(p.year) * 100 + m;
+            };
 
-// Sort periods chronologically
-let earlier = p1, later = p2;
-if (getSortableValue(p1) > getSortableValue(p2)) {
-    [earlier, later] = [p2, p1];
-}
+            // Sort periods chronologically
+            let earlier = p1, later = p2;
+            if (getSortableValue(p1) > getSortableValue(p2)) {
+                [earlier, later] = [p2, p1];
+            }
 
-// Now fetch sales using sorted periods
-const sales1 = getSales(earlier.month, earlier.year);
-const sales2 = getSales(later.month, later.year);
+            // Now fetch sales using sorted periods
+            const sales1 = getSales(earlier.month, earlier.year);
+            const sales2 = getSales(later.month, later.year);
 
-const label1 = earlier.month ? `${earlier.month.toLowerCase()} ${earlier.year}` : earlier.year;
-const label2 = later.month ? `${later.month.toLowerCase()} ${later.year}` : later.year;
-
-
-
+            const label1 = earlier.month ? `${earlier.month.toLowerCase()} ${earlier.year}` : earlier.year;
+            const label2 = later.month ? `${later.month.toLowerCase()} ${later.year}` : later.year;
 
             let percentChange = 'N/A';
             let colorClass = '';
@@ -1093,9 +1197,9 @@ const label2 = later.month ? `${later.month.toLowerCase()} ${later.year}` : late
             const table = `
         <h3 class="font-semibold mb-1">Sales Comparison for <strong>${customerName}</strong></h3>
         <table class="min-w-full text-sm">
-            <tr><th class="text-left pr-4">Period</th><th class="text-right">Sales Qty</th></tr>
-            <tr><td class="pr-4">${label1}</td><td class="text-right">${sales1.toLocaleString()}</td></tr>
-            <tr><td class="pr-4">${label2}</td><td class="text-right">${sales2.toLocaleString()}</td></tr>
+            <tr style="background-color: #f3f4f6;"><th class="border border-black px-2 py-1">Period</th><th class="border border-black px-2 py-1">Sales Qty</th></tr>
+            <tr><td class="border border-black px-2 py-1">${label1}</td><td class="border border-black px-2 py-1">${sales1.toLocaleString()}</td></tr>
+            <tr><td class="border border-black px-2 py-1">${label2}</td><td class="border border-black px-2 py-1">${sales2.toLocaleString()}</td></tr>
         </table>
         <div class="mt-2 text-sm text-gray-700">Percentage Change: <strong>${percentChange}</strong></div>
     `;
@@ -1121,139 +1225,374 @@ const label2 = later.month ? `${later.month.toLowerCase()} ${later.year}` : late
 
         // This should be in the SEND button handler, NOT querySelect change
 
-       document.getElementById('sendBtn').addEventListener('click', handleUserRequest);
-document.getElementById('userInput').addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') handleUserRequest();
-});
-function handleUserRequest() {
-    const query = document.getElementById('querySelect').value;
-    const month = document.getElementById('monthSelect').value;
-    const year = document.getElementById('yearSelect').value;
-    const product = document.getElementById('productSelect').value;
-    const userText = document.getElementById('userInput').value.trim();
+        // Trigger handleUserRequest when Enter is pressed and a dropdown is focused
+        document.addEventListener('keydown', function (e) {
+            const isDropdownFocused = ['querySelect', 'yearSelect', 'monthSelect', 'productSelect'].includes(document.activeElement.id);
+            if (e.key === 'Enter' && isDropdownFocused) {
+                handleUserRequest();
+            }
+        });
 
-    let handled = false;
+        function handleUserRequest() {
+            const query = document.getElementById('querySelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearSelect').value;
+            const product = document.getElementById('productSelect').value;
+            const userText = document.getElementById('userInput').value.trim();
 
-    // Step 1: Handle customer comparison inputs
-    if (session.awaitingCustomerName && userText) {
-        session.customerCompare.name = userText;
-        session.awaitingCustomerName = false;
-        session.awaitingCustomerPeriod = 'first';
-        addMessage('Bot', 'Now enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024":');
-        document.getElementById('userInput').value = '';
-        return;
-    }
+            let handled = false;
 
-    if (session.awaitingCustomerPeriod && userText) {
-    const parts = userText.toLowerCase().split(' and ');
-    if (parts.length !== 2) {
-        addMessage('Bot', 'Please enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024"');
-        return;
-    }
+            // Step 1: Handle customer comparison inputs
+            if (session.awaitingCustomerName && userText) {
+                session.customerCompare.name = userText;
+                session.awaitingCustomerName = false;
+                session.awaitingCustomerPeriod = 'first';
+                addMessage('Bot', 'Now enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024":');
+                document.getElementById('userInput').value = '';
+                return;
+            }
 
-    const extractPeriod = (str) => {
-        const tokens = str.trim().split(' ');
-        return {
-            month: tokens.length === 2 ? tokens[0] : null,
-            year: tokens.length === 2 ? tokens[1] : tokens[0]
-        };
-    };
-
-    session.customerCompare.period1 = extractPeriod(parts[0]);
-    session.customerCompare.period2 = extractPeriod(parts[1]);
-
-    compareCustomerSales(
-        session.customerCompare.name,
-        session.customerCompare.period1,
-        session.customerCompare.period2,
-        product
-    );
-    session.awaitingCustomerPeriod = false;
-    document.getElementById('userInput').value = '';
-    return;
-}
-
-
-    // Step 2: Handle regular queries
-    switch (query) {
-        case 'sales': showSalesForSelection(month, year, product); handled = true; break;
-        case 'avg': showAverageSales(month, year, product); handled = true; break;
-        case 'monthly': showMonthlySales(year, product); handled = true; break;
-        case 'citywise': showLocationWiseSales('city', month, year, product); handled = true; break;
-        case 'statewise': showLocationWiseSales('state', month, year, product); handled = true; break;
-        case 'top5cities': showTopBottomCities(month, year, product, 'top'); handled = true; break;
-        case 'top5states': showTopBottomStates(month, year, product, 'top'); handled = true; break;
-        case 'bottom5cities': showTopBottomCities(month, year, product, 'bottom'); handled = true; break;
-        case 'bottom5states': showTopBottomStates(month, year, product, 'bottom'); handled = true; break;
-        case 'top5customers': showTopBottomCustomers(month, year, product, 'top'); handled = true; break;
-        case 'bottom5customers': showTopBottomCustomers(month, year, product, 'bottom'); handled = true; break;
-        case 'specificcity':
-            if (userText) showSpecificLocationSales(userText.toLowerCase(), month, year, product);
-            else addMessage('Bot', 'Please enter a city name.');
-            handled = true;
-            break;
-        case 'specificstate':
-            if (userText) showSpecificStateSales(userText.toLowerCase(), month, year, product);
-            else addMessage('Bot', 'Please enter a state name.');
-            handled = true;
-            break;
-        case 'compare':
-            if (userText) handleComparisonQuery(userText.toLowerCase(), product);
-            else addMessage('Bot', 'Please enter your comparison query.');
-            handled = true;
-            break;
-        case 'plant': showPlantPerformance(month, year, product); handled = true; break;
-        case 'topcustomersstate': showTopCustomersPerState(month, year, product); handled = true; break;
-        case 'topcustomerscity': showTopCustomersPerCity(month, year, product); handled = true; break;
-        case 'quarterly': showQuarterlySales(month, year, product); handled = true; break;
-        case 'comparecities':
-            if (userText) {
-                const parts = userText.split(" and ");
-                if (parts.length === 2) {
-                    const city1 = parts[0].replace(/compare/i, '').trim();
-                    const city2 = parts[1].trim();
-                    compareCities(city1, city2, month, year, product);
-                    handled = true;
-                } else {
-                    addMessage('Bot', 'Please enter in the format: compare City1 and City2');
+            if (session.awaitingCustomerPeriod && userText) {
+                const parts = userText.toLowerCase().split(' and ');
+                if (parts.length !== 2) {
+                    addMessage('Bot', 'Please enter two periods like "2023 and 2024" or "Jan 2023 and Feb 2024"');
+                    return;
                 }
-            } else addMessage('Bot', 'Please enter two valid city names.');
-            break;
-        case 'comparestates':
-            if (userText) {
-                const parts = userText.split(" and ");
-                if (parts.length === 2) {
-                    const state1 = parts[0].replace(/compare/i, '').trim();
-                    const state2 = parts[1].trim();
-                    compareStates(state1, state2, month, year, product);
-                    handled = true;
-                } else {
-                    addMessage('Bot', 'Please enter in the format: compare State1 and State2');
+
+                const extractPeriod = (str) => {
+                    const tokens = str.trim().split(' ');
+                    return {
+                        month: tokens.length === 2 ? tokens[0] : null,
+                        year: tokens.length === 2 ? tokens[1] : tokens[0]
+                    };
+                };
+
+                session.customerCompare.period1 = extractPeriod(parts[0]);
+                session.customerCompare.period2 = extractPeriod(parts[1]);
+
+                compareCustomerSales(
+                    session.customerCompare.name,
+                    session.customerCompare.period1,
+                    session.customerCompare.period2,
+                    product
+                );
+                session.awaitingCustomerPeriod = false;
+                document.getElementById('userInput').value = '';
+                return;
+            }
+            function showPlantSalesToNonFocusStates(month, year, product) {
+                const filtered = filterData(month, year, product);
+                if (!filtered.length) return addMessage('Bot', 'No data found.');
+
+                const plantStatesMap = {};
+                const salesBreakdown = {};
+
+                // Step 1: Map Plant to its most common destination state (assume home state)
+                filtered.forEach(r => {
+                    const plant = r['Plant_Name'];
+                    const state = r['Ship To State Text'];
+                    if (!plant || !state) return;
+
+                    if (!plantStatesMap[plant]) plantStatesMap[plant] = {};
+                    plantStatesMap[plant][state] = (plantStatesMap[plant][state] || 0) + 1;
+                });
+
+                const plantHomeStates = {};
+                for (const plant in plantStatesMap) {
+                    const stateCounts = plantStatesMap[plant];
+                    const homeState = Object.entries(stateCounts).sort((a, b) => b[1] - a[1])[0][0];
+                    plantHomeStates[plant] = homeState;
                 }
-            } else addMessage('Bot', 'Please enter two valid state names.');
-            break;
-        case 'focusstates': compareMaharashtraAndKarnataka(month, year, product); handled = true; break;
-        case 'focusproductstates': showProductSalesForFocusStates(month, year, product); handled = true; break;
-        case 'skusales': showSkuWiseSales(month, year, product); handled = true; break;
-        case 'districtbreakdown': showSalesByDistrictAndState(month, year, product); handled = true; break;
-        case 'stateproductbreakdown': showStateWiseProductSales(month, year, product); handled = true; break;
-        case 'comparecustomersales':
-            session.customerCompare = {};
-            session.awaitingCustomerName = true;
-            session.awaitingCustomerPeriod = false;
-            addMessage('Bot', 'Please enter the Customer Name:');
-            handled = true;
-            break;
-    }
 
-    if (!handled && query === "") {
-        addMessage('Bot', "Please select a query from the drop-down or type your request.");
-    }
+                // Step 2: Capture sales to non-home states
+                filtered.forEach(r => {
+                    const plant = r['Plant_Name'];
+                    const toState = r['Ship To State Text'];
+                    const qty = +r['Net Sales Qty'] || 0;
+                    if (!plant || !toState || !qty) return;
 
-    document.getElementById('userInput').value = '';
-}
+                    const home = plantHomeStates[plant];
+                    if (toState !== home) {
+                        if (!salesBreakdown[plant]) salesBreakdown[plant] = {};
+                        salesBreakdown[plant][toState] = (salesBreakdown[plant][toState] || 0) + qty;
+                    }
+                });
 
+                // Step 3: Build output
+                let output = `<h3 class="font-semibold mb-1">Plant-wise Sales to Non-Focus States</h3>`;
+
+                for (const plant in salesBreakdown) {
+                    const stateData = salesBreakdown[plant];
+                    const sortedStates = Object.entries(stateData).sort((a, b) => b[1] - a[1]);
+
+                    output += `<div class="mb-2"><strong>${plant}</strong>`;
+                    output += `<table class="min-w-full text-sm mt-1 mb-3">
+            <tr style="background-color: #f3f4f6;">
+                <th class="border border-black px-2 py-1">State</th>
+                <th class="border border-black px-2 py-1">Sales Qty</th>
+            </tr>`;
+
+                    sortedStates.forEach(([state, qty]) => {
+                        output += `<tr>
+                <td class="border border-black px-2 py-1">${state}</td>
+                <td class="border border-black px-2 py-1">${qty.toLocaleString()}</td>
+            </tr>`;
+                    });
+
+                    output += `</table></div>`;
+                }
+
+                if (!Object.keys(salesBreakdown).length) {
+                    addMessage('Bot', 'No sales found to non-focus states.');
+                } else {
+                    addMessage('Bot', output);
+                }
+            }
+
+
+            // Step 2: Handle regular queries
+            switch (query) {
+                case 'sales': showSalesForSelection(month, year, product); handled = true; break;
+                case 'avg': showAverageSales(month, year, product); handled = true; break;
+                case 'monthly': showMonthlySales(year, product); handled = true; break;
+                case 'citywise': showLocationWiseSales('city', month, year, product); handled = true; break;
+                case 'statewise': showLocationWiseSales('state', month, year, product); handled = true; break;
+                case 'top5cities': showTopBottomCities(month, year, product, 'top'); handled = true; break;
+                case 'top5states': showTopBottomStates(month, year, product, 'top'); handled = true; break;
+                case 'bottom5cities': showTopBottomCities(month, year, product, 'bottom'); handled = true; break;
+                case 'bottom5states': showTopBottomStates(month, year, product, 'bottom'); handled = true; break;
+                case 'top5customers': showTopBottomCustomers(month, year, product, 'top'); handled = true; break;
+                case 'bottom5customers': showTopBottomCustomers(month, year, product, 'bottom'); handled = true; break;
+                case 'specificcity':
+                    const cityOptions = [...new Set(salesData.map(r => r['Ship To City']).filter(Boolean))].sort();
+                    openModal('Sales in Specific City', [
+                        { id: 'cityName', placeholder: 'Select City', type: 'select', options: cityOptions }
+                    ], (city) => {
+                        showSpecificLocationSales(city, month, year, product);
+                    });
+                    handled = true;
+                    break;
+                case 'specificstate':
+                    const stateOptions = [...new Set(salesData.map(r => r['Ship To State Text']).filter(Boolean))].sort();
+                    openModal('Sales in Specific State', [
+                        { id: 'stateName', placeholder: 'Select State', type: 'select', options: stateOptions }
+                    ], (state) => {
+                        showSpecificStateSales(state, month, year, product);
+                    });
+                    handled = true;
+                    break;
+                case 'compare':
+                    const monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const yearsList = [...new Set(salesData.map(r => r['Year']).filter(Boolean))].sort((a, b) => b - a);
+
+                    openModal('Compare Two Periods', [
+                        { id: 'month1', placeholder: 'Select First Month (Optional)', type: 'select', options: monthsList },
+                        { id: 'year1', placeholder: 'Select First Year', type: 'select', options: yearsList },
+                        { id: 'month2', placeholder: 'Select Second Month (Optional)', type: 'select', options: monthsList },
+                        { id: 'year2', placeholder: 'Select Second Year', type: 'select', options: yearsList }
+                    ], (m1, y1, m2, y2) => {
+                        const query = `compare ${m1 ? m1 + ' ' : ''}${y1} and ${m2 ? m2 + ' ' : ''}${y2}`;
+                        handleComparisonQuery(query, product);
+                    });
+                    handled = true;
+                    break;
+                case 'comparecities':
+                    const cities = [...new Set(salesData.map(r => r['Ship To City']).filter(Boolean))].sort();
+                    openModal('Compare Two Cities', [
+                        { id: 'city1', placeholder: 'Select First City', type: 'select', options: cities },
+                        { id: 'city2', placeholder: 'Select Second City', type: 'select', options: cities }
+                    ], (c1, c2) => {
+                        compareCities(c1, c2, month, year, product);
+                    });
+                    handled = true;
+                    break;
+                case 'comparestates':
+                    const states = [...new Set(salesData.map(r => r['Ship To State Text']).filter(Boolean))].sort();
+                    openModal('Compare Two States', [
+                        { id: 'state1', placeholder: 'Select First State', type: 'select', options: states },
+                        { id: 'state2', placeholder: 'Select Second State', type: 'select', options: states }
+                    ], (s1, s2) => {
+                        compareStates(s1, s2, month, year, product);
+                    });
+                    handled = true;
+                    break;
+                case 'plant': showPlantPerformance(month, year, product); handled = true; break;
+                case 'topcustomersstate': showTopCustomersPerState(month, year, product); handled = true; break;
+                case 'topcustomerscity': showTopCustomersPerCity(month, year, product); handled = true; break;
+                case 'quarterly': showQuarterlySales(month, year, product); handled = true; break;
+                case 'focusstates': compareMaharashtraAndKarnataka(month, year, product); handled = true; break;
+                case 'focusproductstates': showProductSalesForFocusStates(month, year, product); handled = true; break;
+                case 'skusales': showSkuWiseSales(month, year, product); handled = true; break;
+                case 'districtbreakdown': showSalesByDistrictAndState(month, year, product); handled = true; break;
+                case 'stateproductbreakdown': showStateWiseProductSales(month, year, product); handled = true; break;
+                case 'comparecustomersales':
+                    const customerNames = [...new Set(salesData.map(r => r['Customer Name']).filter(Boolean))].sort();
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const years = [...new Set(salesData.map(r => r['Year']).filter(Boolean))].sort((a, b) => b - a);
+
+                    openModal('Compare Customer Sales', [
+                        { id: 'customerName', placeholder: 'Select Customer', type: 'select', options: customerNames },
+                        { id: 'month1', placeholder: 'Select First Month', type: 'select', options: months },
+                        { id: 'year1', placeholder: 'Select First Year', type: 'select', options: years },
+                        { id: 'month2', placeholder: 'Select Second Month', type: 'select', options: months },
+                        { id: 'year2', placeholder: 'Select Second Year', type: 'select', options: years }
+                    ], (customer, p1, p2) => {
+                        compareCustomerSales(customer, p1, p2, product);
+                    });
+
+                    handled = true;
+                    break;
+
+
+                case 'nonfocusplants':
+                    showPlantSalesToNonFocusStates(month, year, product);
+                    handled = true;
+                    break;
+            }
+
+            if (!handled && query === "") {
+                addMessage('Bot', "Please select a query from the drop-down or type your request.");
+            }
+
+            document.getElementById('userInput').value = '';
+        }
+
+        function openModal(title, fields, callback) {
+            const container = document.getElementById('modalFields');
+            const modalTitle = document.getElementById('modalTitle');
+            modalTitle.innerText = title;
+            container.innerHTML = '';
+
+            fields.forEach(field => {
+                let input;
+                if (field.type === 'select') {
+                    input = document.createElement('select');
+                    input.id = field.id;
+                    input.className = 'w-full border border-gray-300 p-2 rounded text-base';
+                    input.innerHTML = `<option value="">${field.placeholder}</option>`;
+                    field.options.forEach(opt => {
+                        input.innerHTML += `<option value="${opt}">${opt}</option>`;
+                    });
+                } else {
+                    input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = field.placeholder;
+                    input.id = field.id;
+                    input.className = 'w-full border border-gray-300 p-2 rounded text-sm';
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.appendChild(input);
+                container.appendChild(wrapper);
+            });
+
+            // Show modal
+            document.getElementById('inputModal').classList.remove('hidden');
+
+            document.getElementById('modalSubmitBtn').onclick = function () {
+                const values = fields.map(f => document.getElementById(f.id).value.trim());
+                const queryType = document.getElementById('querySelect').value;
+
+                let isValid = true;
+
+                if (queryType === 'comparecustomersales') {
+                    const [customer, m1, y1, m2, y2] = values;
+                    if (!customer || !y1 || !y2) {
+                        alert('Please select customer and both years (months optional).');
+                        isValid = false;
+                    } else {
+                        callback(customer, { month: m1 || null, year: y1 }, { month: m2 || null, year: y2 });
+                    }
+                }
+
+                else if (queryType === 'compare') {
+                    const [m1, y1, m2, y2] = values;
+                    if (!y1 || !y2) {
+                        alert('Please select both years (months optional).');
+                        isValid = false;
+                    } else {
+                        const query = `compare ${m1 ? m1 + ' ' : ''}${y1} and ${m2 ? m2 + ' ' : ''}${y2}`;
+                        callback(query);
+                    }
+                }
+
+                else if (queryType === 'comparecities') {
+                    const [c1, c2] = values;
+                    if (!c1 || !c2) {
+                        alert('Please select both cities.');
+                        isValid = false;
+                    } else {
+                        callback(c1, c2);
+                    }
+                }
+
+                else if (queryType === 'comparestates') {
+                    const [s1, s2] = values;
+                    if (!s1 || !s2) {
+                        alert('Please select both states.');
+                        isValid = false;
+                    } else {
+                        callback(s1, s2);
+                    }
+                }
+
+                else if (queryType === 'specificstate') {
+                    const [state] = values;
+                    if (!state) {
+                        alert('Please select a state.');
+                        isValid = false;
+                    } else {
+                        callback(state);
+                    }
+                }
+
+                else if (queryType === 'specificcity') {
+                    const [city] = values;
+                    if (!city) {
+                        alert('Please select a city.');
+                        isValid = false;
+                    } else {
+                        callback(city);
+                    }
+                }
+
+                // Close modal only if valid
+                if (isValid) {
+                    document.getElementById('inputModal').classList.add('hidden');
+                }
+            };
+
+            // Cancel button
+            document.getElementById('modalCancelBtn').onclick = function () {
+                document.getElementById('inputModal').classList.add('hidden');
+            };
+        }
+
+
+        function closeModal() {
+            document.getElementById('inputModal').classList.add('hidden');
+        }
+
+        function submitModal() {
+            const inputs = [...document.querySelectorAll('#modalFields input')].map(i => i.value.trim());
+            closeModal();
+            if (typeof window.modalCallback === 'function') {
+                window.modalCallback(...inputs);
+            }
+        }
 
     </script>
+    <div id="inputModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md text-black">
+            <h2 id="modalTitle" class="text-xl font-semibold mb-4 text-gray-800">Modal Title</h2>
+            <div id="modalFields" class="space-y-3"></div>
+            <div class="flex justify-end space-x-2 mt-5">
+                <button id="modalCancelBtn"
+                    class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
+                <button id="modalSubmitBtn"
+                    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Submit</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
